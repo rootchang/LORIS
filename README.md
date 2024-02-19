@@ -151,6 +151,11 @@ Robust prediction of patient outcomes with immune checkpoint blockade therapy fo
 Tian-Gen Chang, Yingying Cao, Hannah J. Sfreddo, Saugato Rahman Dhruba, Se-Hoon Lee, Cristina Valero, Seong-Keun Yoo, Diego Chowell, Luc G. T. Morris, Eytan Ruppin
 bioRxiv 2023.07.04.547697; [doi: 10.1101/2023.07.04.547697](https://doi.org/10.1101/2023.07.04.547697)
 
+## Related links
+Pan-cancer LORIS has been made available as an online tool at [LORIS_NCI](https://loris.ccr.cancer.gov/).
+
+An online calculator featuring a comprehensive list of all four models, including the pan-cancer LLR6 model, pan-cancer LLR5 model without patient systemic therapy history, NSCLC-specific LLR6 model, and NSCLC-specific LLR5 model without patient systemic therapy history, has been deposited on a separate GitHub webpage at [LORIS_web](https://rootchang.github.io/LORIS_web/).
+
 
 ## Contact
 Dr. Eytan Ruppin <eytan.ruppin@nih.gov>; Dr. Luc Morris <morrisl@mskcc.org>; Dr. Tiangen Chang <tiangen.chang@nih.gov>
