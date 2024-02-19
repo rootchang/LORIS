@@ -1,0 +1,136 @@
+###############################################################################################
+Aim: Optimal thresholds for pan-cancer LLR6 and RF6 models
+Description: To determine the optimal absolute and percentile thresholds for pan-cancer LLR6 and RF6 models (which maximizes Youden’s index on the training data)
+###############################################################################################
+
+
+
+# load required package
+```{r}
+library(data.table)
+library(tidyverse)
+library(ggridges)
+library(readxl)
+library(verification)
+library(pROC)
+library(scales)
+library(stats)
+
+```
+
+# Set parameters and directories
+```{r}
+input_dir = "../02.Input/"
+result_dir = "../03.Results/"
+
+```
+
+# load data 
+```{r}
+LLRmodelNA = 'LLR6' #  'LLR6'  'LLR5noTMB'  'LLR5noChemo'
+
+train_LLR6score_df = read_excel(paste0(result_dir,LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "0", col_names = TRUE)
+train_RF6score_df = read_excel(paste0(result_dir,'RF6_Scaler(None)_prediction.xlsx'), "0", col_names = TRUE)
+
+selected_cols = c("SAMPLE_ID", "CancerType", "Response")
+
+train_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+train_info_df = train_info_df[selected_cols]
+
+train_info_df = merge(x = train_info_df, y = train_LLR6score_df[c("SAMPLE_ID","y_pred")], by = "SAMPLE_ID")
+train_info_df = merge(x = train_info_df, y = train_RF6score_df[c("SAMPLE_ID","y_pred")], by = "SAMPLE_ID")
+colnames(train_info_df) = c(selected_cols, c("LLR6score","RF6score"))
+
+CancerTypes = unique(train_info_df$CancerType)
+
+```
+
+
+# determine optimal LLR6score or RF6score percentile threshold by maximizing sensitivity + specificity
+```{r}
+
+LLR6_best_cutoff = 0
+sum_score_max = 0
+for (quant_cutoff in seq(0.1, 0.9, by=0.1)){  # 0.001
+  train_df_temp = train_info_df %>% group_by(CancerType) %>% mutate(
+         score_01 = ifelse(LLR6score >= quantile(LLR6score, quant_cutoff), 1, 0),
+         )
+  confusion <- confusionMatrix(as.factor(train_df_temp$score_01), as.factor(train_df_temp$Response))
+  sensitivity <- confusion$byClass["Sensitivity"]
+  specificity <- confusion$byClass["Specificity"]
+  sum_score = sensitivity + specificity
+  if (sum_score > sum_score_max){
+    sum_score_max = sum_score
+    LLR6_best_cutoff = quant_cutoff
+  }
+}
+print(paste('LLR6 best percentile cutoff:', LLR6_best_cutoff))
+
+
+
+
+
+RF6_best_cutoff = 0
+sum_score_max = 0
+for (quant_cutoff in seq(0.1, 0.9, by=0.1)){  # 0.001
+  train_df_temp = train_info_df %>% group_by(CancerType) %>% mutate(
+         score_01 = ifelse(RF6score >= quantile(RF6score, quant_cutoff), 1, 0),
+         )
+  confusion <- confusionMatrix(as.factor(train_df_temp$score_01), as.factor(train_df_temp$Response))
+  sensitivity <- confusion$byClass["Sensitivity"]
+  specificity <- confusion$byClass["Specificity"]
+  sum_score = sensitivity + specificity
+  if (sum_score > sum_score_max){
+    sum_score_max = sum_score
+    RF6_best_cutoff = quant_cutoff
+  }
+}
+print(paste('RF6 best percentile cutoff:', RF6_best_cutoff))
+
+
+```
+
+
+# determine optimal LLR6score or RF6score absolute threshold by maximizing sensitivity + specificity
+```{r}
+
+LLR6_best_cutoff = 0
+sum_score_max = 0
+for (cutoff in seq(0.1, 0.9, by=0.001)){
+  train_df_temp = train_info_df %>% group_by(CancerType) %>% mutate(
+         score_01 = ifelse(LLR6score >= cutoff, 1, 0),
+         )
+  confusion <- confusionMatrix(as.factor(train_df_temp$score_01), as.factor(train_df_temp$Response))
+  sensitivity <- confusion$byClass["Sensitivity"]
+  specificity <- confusion$byClass["Specificity"]
+  sum_score = sensitivity + specificity
+  if (sum_score > sum_score_max){
+    sum_score_max = sum_score
+    LLR6_best_cutoff = cutoff
+  }
+  #print(paste(cutoff, sum_score))
+}
+print(paste('LLR6 best absolute cutoff:', LLR6_best_cutoff))
+
+
+
+
+RF6_best_cutoff = 0
+sum_score_max = 0
+for (cutoff in seq(0.1, 0.9, by=0.001)){
+  train_df_temp = train_info_df %>% group_by(CancerType) %>% mutate(
+         score_01 = ifelse(RF6score >= cutoff, 1, 0),
+         )
+  confusion <- confusionMatrix(as.factor(train_df_temp$score_01), as.factor(train_df_temp$Response))
+  sensitivity <- confusion$byClass["Sensitivity"]
+  specificity <- confusion$byClass["Specificity"]
+  sum_score = sensitivity + specificity
+  if (sum_score > sum_score_max){
+    sum_score_max = sum_score
+    RF6_best_cutoff = cutoff
+  }
+}
+print(paste('RF6 best absolute cutoff:', RF6_best_cutoff))
+
+
+```

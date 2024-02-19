@@ -1,0 +1,9 @@
+Raw data processing ...
+  Number of all features:  31 
+  Their names:  ['TMB', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage', 'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI', 'CancerType1', 'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7', 'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13', 'CancerType14', 'CancerType15', 'CancerType16']
+  Phenotype name:  Response
+  Negative/Positive samples in training set:  2.4184397163120566
+Data size:  964
+Best params on CV sets:  {'tol': 0.03162277660168379, 'max_iter': -1, 'kernel': 'linear', 'gamma': 0.0031622776601683794, 'class_weight': None, 'C': 3.1622776601683795}
+Best score on CV sets:  0.7262328068144113
+Hyperparameter screening done! Time used:  17386.549593687057

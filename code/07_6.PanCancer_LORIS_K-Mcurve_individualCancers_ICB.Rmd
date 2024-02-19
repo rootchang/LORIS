@@ -1,0 +1,218 @@
+###############################################################################################
+Aim: Kaplan-Meier analysis of PFS/OS in individual cancers
+Description: To plot Kaplan-Meier curves of PFS/OS in individual cancers of merged MSK cohorts (Supplementary Figs. 4,5)
+###############################################################################################
+
+
+
+# load required package
+```{r}
+library(data.table)
+library(tidyverse)
+library(survminer)
+library(survival)
+library(ggridges)
+library(qvalue)
+library(readxl)
+library(verification)
+library(pROC)
+library(forestplot)
+
+library(viridis)
+library(patchwork)
+library(gridExtra)
+
+```
+
+# Set parameters and directories
+```{r}
+input_dir = "../02.Input/"
+result_dir = "../03.Results/"
+
+LLRmodelNA = 'LLR6'
+LLR6_percentCutoff = 0.5
+TMB_percentCutoff = 0.8
+
+```
+
+# load data 
+```{r}
+train_LLR6score_df = read_excel(paste0(result_dir,'PanCancer_all_LLR6_Scaler(StandardScaler)_prediction.xlsx'), "0", col_names = TRUE)
+
+test1_LLR6score_df = read_excel(paste0(result_dir,'PanCancer_all_LLR6_Scaler(StandardScaler)_prediction.xlsx'), "1", col_names = TRUE)
+test2_LLR6score_df = read_excel(paste0(result_dir,'PanCancer_all_LLR6_Scaler(StandardScaler)_prediction.xlsx'), "2")
+test3_LLR6score_df = read_excel(paste0(result_dir,'PanCancer_all_LLR6_Scaler(StandardScaler)_prediction.xlsx'), "3")
+LLR6score_df = rbind(train_LLR6score_df,test1_LLR6score_df,test2_LLR6score_df,test3_LLR6score_df)
+
+selected_cols = c("SAMPLE_ID","Year of ICI treatment start", "TMB", "Chemo_before_IO", "CancerType", "Age", "Drug", "Sex", "PFS_Event", "PFS_Months", "OS_Event", "OS_Months")
+
+train_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+train_info_df = train_info_df[selected_cols]
+test1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2018")
+test1_info_df = test1_info_df[selected_cols]
+test2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new")
+test2_info_df = test2_info_df[selected_cols]
+test3_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new2")
+test3_info_df = test3_info_df[selected_cols]
+
+renamed_cols = c("SAMPLE_ID","Year_IO", "TMB", "Chemo_before_IO", "CancerType", "Age", "Drug", "Sex", "PFS_Event", "PFS_Months", "OS_Event", "OS_Months")
+
+info_df = rbind(train_info_df,test1_info_df,test2_info_df,test3_info_df)
+info_df = merge(x = info_df, y = LLR6score_df[c("SAMPLE_ID","y_pred")], by = "SAMPLE_ID")
+colnames(info_df) = c(renamed_cols, c("LLR6score"))
+
+
+
+CancerTypes = unique(info_df$CancerType)
+
+```
+
+
+
+# K-M PFS analysis for individual cancer types (merged MSK cohort)
+```{r}
+
+stratify_var = 'LORIS-'
+
+info_df = info_df %>% group_by(CancerType) %>% mutate(
+         LLR6score_01 = ifelse(LLR6score >= quantile(LLR6score,LLR6_percentCutoff), "LLR6high", "LLR6low"),
+         TMB_01 = ifelse(TMB >= quantile(TMB,TMB_percentCutoff), "TMBhigh", "TMBlow"),
+         )
+
+data_plot = info_df
+data_plot[['LLR6score_01']] <- relevel(factor(data_plot[['LLR6score_01']]), ref = "LLR6high")
+
+for (ct in CancerTypes){
+  data_temp = data_plot[data_plot$CancerType==ct,]
+  cancerData=data.frame(data_temp['LLR6score_01'],data_temp$PFS_Months,data_temp$PFS_Event)
+  colnames(cancerData) = c("Score", "PFS_Months", "PFS_Event")
+  sfit = survfit(Surv(data_temp$PFS_Months,data_temp$PFS_Event) ~ Score, data=cancerData)
+  scox = coxph(Surv(data_temp$PFS_Months,data_temp$PFS_Event)~Score, data=cancerData)
+  scox_coef = summary(scox)$coefficients
+  HR_value = scox_coef[2] # hazard ratio
+  Z_value=scox_coef[4]
+  P_value=scox_coef[5]
+  HR_CI = exp(confint(scox))
+  print(paste(c('PFS', ct, round(P_value,5), round(HR_value,2)), collapse= " "))
+  ##### plot
+  fontSize = 13
+  survp=ggsurvplot(
+    sfit,
+    data = cancerData,
+    size = 1,                 # change line size
+    palette = c("#377EB8", "#FF7F0E"), #viridis_pal()(2), #plasma(2),
+    conf.int = F,          # Add confidence interval
+    pval = FALSE,              # Add p-value
+    ylim=c(0,1),
+    xlab = "Time (months)", ylab="PFS probability",# Time in months
+    break.time.by = 10,
+    risk.table=TRUE,
+    risk.table.height = 0.25, # Useful to change when you have multiple groups
+    risk.table.pos="out",
+    risk.table.col="black",
+    risk.table.y.text = FALSE,
+    tables.y.text = FALSE, 
+    tables.theme = theme_cleantable(),
+    legend.labs =c(paste0(stratify_var," high"),paste0(stratify_var," low")),    # Change legend labels
+    legend.title="",
+    legend = c(2.65, 0.9), # legend relative position
+    font.main = c(fontSize),
+    font.caption = c(fontSize),
+    font.legend = c(fontSize),
+    font.tickslab = c(fontSize),
+    font.x = c(fontSize),
+    font.y = c(fontSize),
+    ggtheme = theme(legend.background = element_rect(fill = NA, color=NA),legend.key = element_rect(fill = NA, color=NA),
+                   plot.margin = unit(c(0.2, 0.2, 0, 0.2),"cm"),
+                   panel.background = element_rect(fill = "white"),
+                   panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                   panel.border = element_blank(),axis.line = element_line(colour = "black"),
+                   axis.text.x = element_text(colour="black"),axis.text.y = element_text(colour="black")),  # top, right, bot, left
+  )+ 
+    guides(colour = guide_legend(nrow = 1)) # legend in rows
+  survp$plot = survp$plot+ 
+              ggplot2::annotate("text", x=0, y=0.2, label=paste0('p = ',sprintf('%.1e', P_value), '\n', 'HR',' = ',round(HR_value,2),' (', round(HR_CI[1],2),'-',round(HR_CI[2],2),')'),size = 5, hjust = 0)
+  title_str = paste0('MSK_allMerged_',ct,'_PFS_LLR6score') # round(P_value,3)
+  pdf(paste(result_dir,title_str,".pdf",sep = ""),width=3, height=3)
+  print(survp, newpage = FALSE)
+  dev.off()
+}
+
+```
+
+# K-M OS analysis for individual cancer types (merged MSK cohort)
+```{r}
+
+stratify_var = 'LORIS-'
+
+info_df = info_df %>% group_by(CancerType) %>% mutate(
+         LLR6score_01 = ifelse(LLR6score >= quantile(LLR6score,LLR6_percentCutoff), "LLR6high", "LLR6low"),
+         TMB_01 = ifelse(TMB >= quantile(TMB,TMB_percentCutoff), "TMBhigh", "TMBlow"),
+         )
+
+data_plot = info_df
+data_plot[['LLR6score_01']] <- relevel(factor(data_plot[['LLR6score_01']]), ref = "LLR6high")
+
+write.csv(data_plot, paste0(result_dir,"source_data_fig04.csv"))
+
+
+for (ct in CancerTypes){
+  data_temp = data_plot[data_plot$CancerType==ct,]
+  cancerData=data.frame(data_temp['LLR6score_01'],data_temp$OS_Months,data_temp$OS_Event)
+  colnames(cancerData) = c("Score", "OS_Months", "OS_Event")
+  sfit = survfit(Surv(data_temp$OS_Months,data_temp$OS_Event) ~ Score, data=cancerData)
+  scox = coxph(Surv(data_temp$OS_Months,data_temp$OS_Event)~Score, data=cancerData)
+  scox_coef = summary(scox)$coefficients
+  HR_value = scox_coef[2] # hazard ratio
+  Z_value=scox_coef[4]
+  P_value=scox_coef[5]
+  HR_CI = exp(confint(scox))
+  print(paste(c('OS', ct, round(P_value,5), round(HR_value,2)), collapse= " "))
+  ##### plot
+  fontSize = 13
+  survp=ggsurvplot(
+    sfit,
+    data = cancerData,
+    size = 1,                 # change line size
+    palette = c("#377EB8", "#FF7F0E"), #viridis_pal()(2), #plasma(2),
+    conf.int = F,          # Add confidence interval
+    pval = FALSE,              # Add p-value
+    ylim=c(0,1),
+    xlab = "Time (months)", ylab="OS probability",# Time in months
+    break.time.by = 10,
+    risk.table=TRUE,
+    risk.table.height = 0.25, # Useful to change when you have multiple groups
+    risk.table.pos="out",
+    risk.table.col="black",
+    risk.table.y.text = FALSE,
+    tables.y.text = FALSE, 
+    tables.theme = theme_cleantable(),
+    legend.labs =c(paste0(stratify_var," high"),paste0(stratify_var," low")),    # Change legend labels
+    legend.title="",
+    legend = c(0.65, 0.9), # legend relative position
+    font.main = c(fontSize),
+    font.caption = c(fontSize),
+    font.legend = c(fontSize),
+    font.tickslab = c(fontSize),
+    font.x = c(fontSize),
+    font.y = c(fontSize),
+    ggtheme = theme(legend.background = element_rect(fill = NA, color=NA),
+                    legend.key = element_rect(fill = NA, color=NA),
+                   plot.margin = unit(c(0.2, 0.2, 0, 0.2),"cm"),
+                   panel.background = element_rect(fill = "white"),
+                   panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                   panel.border = element_blank(),axis.line = element_line(colour = "black"),
+                   axis.text.x = element_text(colour="black"),axis.text.y = element_text(colour="black")),  # top, right, bot, left
+  )+ 
+    guides(colour = guide_legend(ncol = 1)) # nrow = 1
+  survp$plot = survp$plot+ 
+              ggplot2::annotate("text", x=0, y=0.2, label=paste0('p = ',sprintf('%.1e', P_value), '\n', 'HR',' = ',round(HR_value,2),' (', round(HR_CI[1],2),'-',round(HR_CI[2],2),')'),size = 5, hjust = 0)
+  title_str = paste0('MSK_allMerged_',ct,'_OS_LLR6score') # round(P_value,3)
+  pdf(paste(result_dir,title_str,".pdf",sep = ""),width=3, height=3)
+  print(survp, newpage = FALSE)
+  dev.off()
+}
+
+```
+
+

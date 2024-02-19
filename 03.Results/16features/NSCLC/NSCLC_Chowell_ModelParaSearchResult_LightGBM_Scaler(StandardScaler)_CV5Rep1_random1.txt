@@ -1,0 +1,9 @@
+Raw data processing ...
+  Number of all features:  16 
+  Their names:  ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage', 'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI']
+  Phenotype name:  Response
+  Negative/Positive samples in training set:  2.640449438202247
+Data size:  324
+Best params on CV sets:  {'num_leaves': 100, 'n_estimators': 800, 'min_data_in_leaf': 30, 'max_depth': 7, 'learning_rate': 0.01, 'colsample_bytree': 0.2}
+Best score on CV sets:  0.7736588141474425
+Hyperparameter screening done! Time used:  617.0171794891357

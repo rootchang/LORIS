@@ -1,0 +1,231 @@
+###############################################################################################
+Aim: Predict survival of NSCLC patients using different models
+Description: calculate multi-variable hazard ratios for different cohorts using LORIS, PDL1 & TMB
+LORIS has been calculated using NSCLC-specific LLR6, pan-cancer LLR6, and NSCLC-specific LLR2 models respectively
+(Fig. 6d,e; Extended Data Fig. 5b,c; Supplementary Fig. 7b,c)
+###############################################################################################
+
+
+# load required package
+```{r}
+library(data.table)
+library(tidyverse)
+library(survminer)
+library(survival)
+library(ggridges)
+library(qvalue)
+library(readxl)
+library(verification)
+library(pROC)
+library(forestplot)
+```
+
+# Set parameters and directories
+```{r}
+input_dir = "../02.Input/"
+result_dir = "../03.Results/"
+
+LLRmodelNA = 'LLR2' # LLR6   'LLR2'   'LLR6Pan'
+
+if (LLRmodelNA=='LLR6'){
+  absoluteCutoff = 0.44
+}else if (LLRmodelNA=='LLR2'){
+  absoluteCutoff = 0.46
+}else if (LLRmodelNA=='LLR6Pan'){
+  absoluteCutoff = 0.5
+}
+
+
+```
+
+# load data 
+```{r}
+train_LLR6score_df = read_excel(paste0(result_dir,'NSCLC_',LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "0", col_names = TRUE)
+test1_LLR6score_df = read_excel(paste0(result_dir,'NSCLC_',LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "1", col_names = TRUE)
+test2_LLR6score_df = read_excel(paste0(result_dir,'NSCLC_',LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "2")
+test3_LLR6score_df = read_excel(paste0(result_dir,'NSCLC_',LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "3")
+test4_LLR6score_df = read_excel(paste0(result_dir,'NSCLC_',LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "4")
+
+train_LLR6score_df$DataSet <- "Chowell et al."
+test1_LLR6score_df$DataSet <- "MSK1"
+test2_LLR6score_df$DataSet <- "Shim et al."
+test3_LLR6score_df$DataSet <- "Vanguri et al."
+test4_LLR6score_df$DataSet <- "Ravi et al."
+
+all_LLR6score_df = rbind(train_LLR6score_df,test1_LLR6score_df,test2_LLR6score_df,test3_LLR6score_df,test4_LLR6score_df)
+
+selected_cols = c("SAMPLE_ID","TMB","PDL1_TPS(%)","Chemo_before_IO","Age","Drug","Sex","PFS_Event","PFS_Months","OS_Event","OS_Months")
+
+train1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+train1_info_df = train1_info_df[train1_info_df$CancerType=='NSCLC',selected_cols]
+train2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2018")
+train2_info_df = train2_info_df[train2_info_df$CancerType=='NSCLC',selected_cols]
+train_info_df  = rbind(train1_info_df,train2_info_df)
+test1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new")
+test1_info_df = test1_info_df[test1_info_df$CancerType=='NSCLC',selected_cols]
+test2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Lee_NSCLC")
+test2_info_df = test2_info_df[selected_cols]
+test3_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Vanguri_NSCLC_all")
+test3_info_df = test3_info_df[selected_cols]
+test4_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Ravi_NSCLC")
+test4_info_df = test4_info_df[selected_cols]
+
+info_df = rbind(train_info_df,test1_info_df,test2_info_df,test3_info_df,test4_info_df)
+
+info_df = merge(x = info_df, y = all_LLR6score_df[c("SAMPLE_ID","y_pred", "DataSet")], by = "SAMPLE_ID")
+colnames(info_df) = c("SAMPLE_ID","TMB","PDL1","Chemo_before_IO","Age","Drug","Sex","PFS_Event","PFS_Months","OS_Event","OS_Months", "LLRscore", "DataSet")
+
+DataSets = c('Chowell et al.', 'MSK1', 'Shim et al.', 'Vanguri et al.', 'Ravi et al.')
+```
+
+
+# Binarize LLR6, PD-L1 and TMB values
+```{r}
+info_df = info_df %>% group_by(DataSet) %>% mutate(
+         LLRscore_01 = ifelse(LLRscore >= absoluteCutoff, "high", "low"),
+         PDL1_01 = ifelse(PDL1 >= 50, "high", "low"),
+         TMB_01 = ifelse(TMB >= 10, "high", "low"),
+         LLRscore_01_2 = ifelse(LLRscore >= quantile(LLRscore, 0.5), "high", "low"),
+         PDL1_01_2 = ifelse(PDL1 >= quantile(PDL1, 0.8), "high", "low"),
+         TMB_01_2 = ifelse(TMB >= quantile(TMB, 0.8), "high", "low"),
+         )
+info_df$LLRscore_01 <- relevel(factor(info_df$LLRscore_01), ref = "low")
+info_df$PDL1_01 <- relevel(factor(info_df$PDL1_01), ref = "low")
+info_df$TMB_01 <- relevel(factor(info_df$TMB_01), ref = "low")
+info_df$LLRscore_01_2 <- relevel(factor(info_df$LLRscore_01_2), ref = "low")
+info_df$PDL1_01_2 <- relevel(factor(info_df$PDL1_01_2), ref = "low")
+info_df$TMB_01_2 <- relevel(factor(info_df$TMB_01_2), ref = "low")
+
+```
+
+# Univariate/Multivariable hazard ratio Forest plot (OS/PFS, continuous/binary)  HR_each_cancer
+```{r}
+survival_type = 'OS' # 'PFS'  'OS'
+HR_type = 'Multi' # Multi Uni
+Var_type = 'binaryAbsolute' # continuous  binaryAbsolute binaryPercent
+testVAR0 = 'LLRscore' # LLRscore TMB PDL1
+testVAR_name = 'LORIS' # LORIS    PDL1 TPS   TMB
+if (Var_type == 'binaryAbsolute'){
+  testVAR = paste0(testVAR0, '_01')
+}else if (Var_type == 'binaryPercent'){
+  testVAR = paste0(testVAR0, '_01_2')
+}
+testVAR_HR = testVAR
+if (grepl("binary", Var_type)){
+  testVAR_HR = paste0(testVAR,'high')
+}
+if (HR_type == 'Multi'){
+  var_names = c(testVAR,'Drug', 'Age','Sex')
+}else{
+  var_names = c(testVAR)
+}
+
+
+HR_pancohort = data.frame()
+DataSet = 'All'
+data_for_HR = info_df
+formula_obj <- as.formula(paste(paste0("Surv(",survival_type,"_Months, ",survival_type,"_Event) ~"), paste(var_names, collapse = " + ")))
+model = coxph(formula_obj, data = data_for_HR)
+
+HR_ct = exp(model$coefficients[[testVAR_HR]])
+HR_ct_025 = exp(confint(model))[testVAR_HR,1]
+HR_ct_975 = exp(confint(model))[testVAR_HR,2]
+p_ct = summary(model)$coefficients[testVAR_HR,5]
+
+HR_pancohort = rbind(HR_pancohort,data.frame(HR_ct,HR_ct_025,HR_ct_975,p_ct,dim(data_for_HR)[1],DataSet))
+colnames(HR_pancohort) = c(paste0('HR_',testVAR),paste0('HR_',testVAR,'025'),paste0('HR_',testVAR,'975'),paste0('p-val_',testVAR),'No. of patients', 'DataSet')
+
+HR_each_cancer = data.frame()
+for (ct in DataSets){
+  DataSet = ct
+  model = coxph(formula_obj, data = data_for_HR[data_for_HR$DataSet==ct,])
+  HR_ct = exp(model$coefficients[[testVAR_HR]])
+  HR_ct_025 = exp(confint(model))[testVAR_HR,1]
+  HR_ct_975 = exp(confint(model))[testVAR_HR,2]
+  p_ct = summary(model)$coefficients[testVAR_HR,5]
+  HR_each_cancer = rbind(HR_each_cancer,data.frame(HR_ct,HR_ct_025,HR_ct_975,p_ct,dim(data_for_HR[data_for_HR$DataSet==ct,])[1],DataSet))
+}
+colnames(HR_each_cancer) = c(paste0('HR_',testVAR),paste0('HR_',testVAR,'025'),paste0('HR_',testVAR,'975'),paste0('p-val_',testVAR),'No. of patients', 'DataSet')
+
+
+
+if (testVAR0 == 'LLRscore'){
+  command_str <- paste0("HR_each_cancer = arrange(HR_each_cancer, desc(HR_",testVAR,"))") # desc(is.na(HR_",testVAR,")),
+  eval(parse(text = command_str))
+  cancerOrder = HR_each_cancer$DataSet
+}else{
+  rownames(HR_each_cancer) = HR_each_cancer$DataSet
+  HR_each_cancer = HR_each_cancer[cancerOrder,]
+}
+
+
+HR_each_cancer = rbind(HR_each_cancer,HR_pancohort)
+
+write.csv(HR_each_cancer, paste0(result_dir,"source_data_efig06bcde.csv"))
+
+
+
+
+plot_data <- tibble::tibble(mean  = HR_each_cancer[[paste0('HR_',testVAR)]],
+                            lower = HR_each_cancer[[paste0('HR_',testVAR,'025')]],
+                            upper = HR_each_cancer[[paste0('HR_',testVAR,'975')]],
+                            dataset = HR_each_cancer$DataSet,
+                            pval = HR_each_cancer[[paste0('p-val_',testVAR)]],
+                            OR = round(HR_each_cancer[[paste0('HR_',testVAR)]], 2),
+                            size = HR_each_cancer$`No. of patients`)
+
+options(scipen = 999)
+P_value_raw = c(plot_data[['pval']], HR_pancohort[[paste0('p-val_',testVAR)]])
+
+
+pval_vec = vector("character", length(P_value_raw))
+for (i in 1:length(P_value_raw)){
+  pval = P_value_raw[i]
+  if (pval>=0.1){
+    pval_vec[i] = as.character(round(pval,2))
+  }else{
+    pval_vec[i] = format(pval, scientific = TRUE, digits = 2)  # Format for scientific notation
+  }
+}
+
+plot_data$pval = pval_vec[1:length(pval_vec)-1]
+
+xmin_lim = 0
+xmax_lim = 1.5
+breaks_x = c(0, 0.5, 1, 1.5)
+labels_x = breaks_x
+
+
+fontSize = 1.2
+
+pdf_file <- paste0(result_dir,paste0("NSCLCcohorts_Forest_",survival_type,"_",HR_type,"_",Var_type,"_",LLRmodelNA,"_",testVAR0,".pdf"))
+fig_width = 5
+fig_height = 3
+pdf(pdf_file, onefile=FALSE, width = fig_width,height=fig_height)
+
+
+plot_data %>%
+  forestplot(labeltext = c("dataset", "size", "pval"),
+             graph.pos = 3,
+             boxsize = 0.35,
+             vertices = TRUE,
+             clip = c(xmin_lim, xmax_lim),
+             xlog = FALSE,
+             zero = 1,
+             txt_gp = fpTxtGp(ticks=gpar(cex=fontSize),xlab=gpar(cex=fontSize),label=gpar(cex=fontSize),legend=gpar(cex=fontSize),title=gpar(cex=fontSize)), # label, summary, xlab, title, ticks legend
+             xlab = paste0("Hazard ratio (",testVAR_name,")"),
+             xticks = breaks_x,
+             graphwidth = unit(3, "cm"),
+             lineheight = unit(2, "cm")
+             ) %>%
+  fp_set_style(box = "black",
+               line = "black",
+               summary = "black") %>%
+  fp_add_header(dataset = c("Data set")|> fp_txt_plain() |> fp_align_center(),
+                size = c("Samples")|> fp_txt_plain() |> fp_align_center(), # "No. of patients"
+                pval = c("P-value")|> fp_txt_plain() |> fp_align_center())
+
+dev.off()
+
+```
+
