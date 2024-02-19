@@ -1,6 +1,6 @@
-#LORIS: A LOgistic Regression-based Immunotherapy-response Score
+##LORIS: A LOgistic Regression-based Immunotherapy-response Score
 
---
+
 
 This is a repository of scripts for reproducing the paper titled "LORIS robustly predicts patient outcomes with immune checkpoint blockade therapy using common clinical, pathologic, and genomic features" by Chang et al.
 
