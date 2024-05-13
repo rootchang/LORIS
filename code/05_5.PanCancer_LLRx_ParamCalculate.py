@@ -2,7 +2,7 @@
 #Aim: coefs. and intercepts for the LLR models
 #Description: To determine the coefs. and intercepts of the
 #             1) pan-cancer LLR6 model using all patients,
-#             2) pan-cancer LLR5noChemo model using all patients,
+#             2) pan-cancer LLR5noPSTH model using all patients,
 #             3) pan-cancer LLR6 model using non-NSCLC patients
 #             with 10k-repeat train-test splitting (80%:20%).
 #
@@ -49,52 +49,45 @@ if __name__ == "__main__":
     train_size = 0.8
 
     phenoNA = 'Response'
-    LLRmodelNA = sys.argv[1]  # 'LLR6'   'LLR5noChemo'
+    LLRmodelNA = sys.argv[1]  # 'LLR6'   'LLR5noPSTH'
     cancer_type = sys.argv[2]  # 'all'   'nonNSCLC'
-    train_sample_size_used = 10000 # use how many samples to train the LLR6
 
     if LLRmodelNA == 'LR16':
-        featuresNA6_LR = ['TMB', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage',
+        featuresNA6_LR = ['TMB', 'Systemic_therapy_history', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage',
                       'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
     if LLRmodelNA == 'LLR6':
-        featuresNA6_LR = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+        featuresNA6_LR = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                           'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                           'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                           'CancerType14', 'CancerType15', 'CancerType16']
     elif LLRmodelNA == 'LLR5noTMB':
-        featuresNA6_LR = ['Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+        featuresNA6_LR = ['Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                           'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                           'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                           'CancerType14', 'CancerType15', 'CancerType16'] # noTMB
-    elif LLRmodelNA == 'LLR5noChemo':
+    elif LLRmodelNA == 'LLR5noPSTH':
         featuresNA6_LR = ['TMB', 'Albumin', 'NLR', 'Age', 'CancerType1',
                           'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                           'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
-                          'CancerType14', 'CancerType15', 'CancerType16']  # noChemo
+                          'CancerType14', 'CancerType15', 'CancerType16']  # noPSTH
     elif LLRmodelNA == 'LLR5noCancer':
-        featuresNA6_LR = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']  # noCancer
-    xy_colNAs = ['TMB', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage',
+        featuresNA6_LR = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age']  # noCancer
+    xy_colNAs = ['TMB', 'Systemic_therapy_history', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage',
                   'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI', 'CancerType1',
                   'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                   'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                   'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA] + ['CancerType']
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     if cancer_type == 'nonNSCLC':
         dataChowell_Train0 = dataChowell_Train0.loc[dataChowell_Train0['CancerType']!='NSCLC',:]
     dataChowell_Train0 = dataChowell_Train0[xy_colNAs]
     dataChowell_Train = copy.deepcopy(dataChowell_Train0)
-    if train_sample_size_used > dataChowell_Train.shape[0]:
-        train_sample_size_used = dataChowell_Train.shape[0]
-    train_ratio_used = min(1, train_sample_size_used / dataChowell_Train.shape[0])
-    if train_ratio_used < 0.99999:
-        dataChowell_Train, useless = train_test_split(dataChowell_Train, test_size=1-train_ratio_used,
-                      random_state=randomSeed, stratify=dataChowell_Train['CancerType'])  # stratify=None
 
     # truncate extreme values of features
     TMB_upper = 50
@@ -105,8 +98,8 @@ if __name__ == "__main__":
     dataChowell_Train['NLR'] = [c if c < NLR_upper else NLR_upper for c in dataChowell_Train['NLR']]
 
     print('Chowell patient number (training): ', dataChowell_Train.shape[0])
-    counter = Counter(dataChowell_Train[phenoNA])  # count examples in each class
-    pos_weight = counter[0] / counter[1]  # estimate scale_pos_weight value
+    counter = Counter(dataChowell_Train[phenoNA])
+    pos_weight = counter[0] / counter[1]
     print('  Phenotype name: ', phenoNA)
     print('  Negative/Positive samples in training set: ', pos_weight)
 
@@ -156,12 +149,8 @@ if __name__ == "__main__":
         LLR_params10000[4].append(p_values[1:]+[p_values[0]])
     performance_test_mean = np.mean(performance_test)
     performance_test_std = np.std(performance_test)
-    if train_ratio_used < 0.99999:
-        fnOut = open('../03.Results/6features/PanCancer/PanCancer_' + LLRmodelNA + '_TrainSize' + str(train_sample_size_used)
-                     + '_10k_ParamCalculate.txt', 'w', buffering=1)
-    else:
-        fnOut = open('../03.Results/6features/PanCancer/PanCancer_'+cancer_type+'_'+LLRmodelNA+'_10k_ParamCalculate.txt', 'w',
-                     buffering=1)
+    fnOut = open('../03.Results/6features/PanCancer/PanCancer_'+cancer_type+'_'+LLRmodelNA+'_10k_ParamCalculate.txt', 'w',
+                 buffering=1)
     for i in range(5):
         LLR_params10000[i] = list(zip(*LLR_params10000[i]))
         LLR_params10000[i] = [np.nanmean(c) for c in LLR_params10000[i]]

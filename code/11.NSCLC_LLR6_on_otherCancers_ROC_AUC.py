@@ -21,8 +21,8 @@ from sklearn.metrics import roc_curve, auc
 
 plt.rcParams.update({'font.size': 10})
 plt.rcParams["font.family"] = "Arial"
-palette = sns.color_palette("deep")
-
+palette = ["#377EB8", "#FF7F00", "#4D9943", "#E7BA52", "#999999", "#F7CAC9"]
+sns.set_palette(palette)
 
 def AUC_calculator(y, y_pred):
     fpr, tpr, threshold = roc_curve(y, y_pred, pos_label=1)
@@ -38,22 +38,22 @@ if __name__ == "__main__":
     ########################## Read in data ##########################
     phenoNA = 'Response'
     LLRmodelNA = 'LLR6'
-    featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
-    xy_colNAs = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age'] + [phenoNA]
+    featuresNA = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age']
+    xy_colNAs = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
+    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
     dataChowell = pd.concat([dataChowellTrain, dataChowellTest], axis=0)
     dataChowell_NSCLC = dataChowell.loc[dataChowell['CancerType'] == 'NSCLC',]
     dataChowell_Gastric = dataChowell.loc[dataChowell['CancerType'] == 'Gastric',]
     dataChowell_Mesothelioma = dataChowell.loc[dataChowell['CancerType'] == 'Mesothelioma',]
     dataChowell_Esophageal = dataChowell.loc[dataChowell['CancerType'] == 'Esophageal',]
 
-    dataMorris_new = pd.read_excel(dataALL_fn, sheet_name='Morris_new', index_col=0)
-    dataMorris_new2 = pd.read_excel(dataALL_fn, sheet_name='Morris_new2', index_col=0)
-    dataMorris = pd.concat([dataMorris_new, dataMorris_new2], axis=0)
+    dataMSK1 = pd.read_excel(dataALL_fn, sheet_name='MSK1', index_col=0)
+    dataMSK12 = pd.read_excel(dataALL_fn, sheet_name='MSK12', index_col=0)
+    dataMorris = pd.concat([dataMSK1, dataMSK12], axis=0)
     dataMorris_Gastric = dataMorris.loc[dataMorris['CancerType'] == 'Gastric',]
     dataMorris_Mesothelioma = dataMorris.loc[dataMorris['CancerType'] == 'Mesothelioma',]
     dataMorris_Esophageal = dataMorris.loc[dataMorris['CancerType'] == 'Esophageal',]
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     dataMSK_Mesothelioma = pd.concat([dataChowell_Mesothelioma[xy_colNAs], dataMorris_Mesothelioma[xy_colNAs]], axis=0)
     dataMSK_Esophageal = pd.concat([dataChowell_Esophageal[xy_colNAs], dataMorris_Esophageal[xy_colNAs]], axis=0)
 
-    dataLee = pd.read_excel(dataALL_fn, sheet_name='Lee_NSCLC', index_col=0)
+    dataLee = pd.read_excel(dataALL_fn, sheet_name='Shim_NSCLC', index_col=0)
 
     dataALL = [dataChowell_NSCLC, dataMSK_Gastric, dataMSK_Mesothelioma, dataMSK_Esophageal]
     for i in range(len(dataALL)):
@@ -139,26 +139,6 @@ if __name__ == "__main__":
     for i in range(len(x_test_list)):
         y_pred_test = x_test_list[i][modelNA]
         y_pred_TMB.append(y_pred_test)
-
-
-
-    ############################## save source data for figure ##############################
-    dataset_list = []
-    true_label_list = []
-    LLR6_pred_list = []
-    PDL1_pred_list = []
-    TMB_pred_list = []
-    dataset_unique = ["Gastric","Esophageal","Mesothelioma"]
-    for i in range(3):
-        LLR6_pred_list.extend(y_pred_LLR6[i+1])
-        PDL1_pred_list.extend(y_pred_PDL1[i+1])
-        TMB_pred_list.extend(y_pred_TMB[i+1])
-        true_label_list.extend(y_test_list[i+1])
-        dataset_list.extend([dataset_unique[i]]*len(y_test_list[i+1]))
-    df = pd.DataFrame({"Cancer_type":dataset_list, "True_label":true_label_list, "NSCLC_LLR6_score":LLR6_pred_list, "PDL1":PDL1_pred_list, "TMB":TMB_pred_list})
-    df.to_csv('../03.Results/source_data_fig08a.csv', index=False)
-
-
 
     ############################## Plot ##############################
     textSize = 8

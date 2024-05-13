@@ -13,12 +13,12 @@ if __name__ == "__main__":
 
     ########################## Order of features ##########################
     if model == "LLR6_pan":
-        featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+        featuresNA = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16'] # pan-cancer feature order
     else:
-        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age'] # NSCLC feature order
+        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age'] # NSCLC feature order
 
     ###################### Read in LLRx model params ######################
     if model == 'LLR6_pan':

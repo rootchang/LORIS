@@ -1,6 +1,6 @@
 ###############################################################################################
 #Aim: Feature importance
-#Description: To make barplot showing feature importance from LR8 and LR6 models (Supplementary Fig. 1).
+#Description: To make barplot showing feature importance from LR8 and LR6 models (Extended Data Fig. 1c,d).
 #             Also, get the optimal hyper-parameters of the LLR6 and LR5noTMB models.
 #
 #Run command, e.g.: python 04.PanCancer_FeaturetImportance.py LR8
@@ -18,25 +18,25 @@ import sys
 phenoNA = 'Response'
 LRmodelNA = sys.argv[1] #  'LR8'   'LR6'   'LR5noTMB'
 if LRmodelNA == 'LR8':
-    featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'Drug', 'Sex', 'CancerType1',
+    featuresNA = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'Drug', 'Sex', 'CancerType1',
                   'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                   'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                   'CancerType14', 'CancerType15', 'CancerType16']
 elif LRmodelNA == 'LR6':
-    featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    featuresNA = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
 elif LRmodelNA == 'LR5noTMB':
-    featuresNA = ['Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    featuresNA = ['Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
-                      'CancerType14', 'CancerType15', 'CancerType16']  # noTMB
+                      'CancerType14', 'CancerType15', 'CancerType16']
 xy_colNAs = featuresNA + [phenoNA]
 
 print('Raw data processing ...')
-dataChowell_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-dataChowell_Train = pd.read_excel(dataChowell_fn, sheet_name='Chowell2015-2017', index_col=0)
+dataChowell_fn = '../02.Input/AllData.xlsx'
+dataChowell_Train = pd.read_excel(dataChowell_fn, sheet_name='Chowell_train', index_col=0)
 dataChowell_Train = dataChowell_Train[xy_colNAs]
 
 Kfold = 5
@@ -77,22 +77,19 @@ LR = grid_cv.best_estimator_.fit(x_train, y_train.values.ravel())
 
 if LRmodelNA == 'LR8':
     coefs = np.array(list(LR.coef_[0][0:7]) + [np.mean(abs(LR.coef_[0][7:]))])
-    feature_NAs = ['TMB', 'Chemotherapy history', 'Albumin', 'NLR', 'Age', 'Drug class', 'Sex', 'Cancer type']
+    feature_NAs = ['TMB', 'Systemic therapy history', 'Albumin', 'NLR', 'Age', 'Drug class', 'Sex', 'Cancer type']
 elif LRmodelNA == 'LR6':
     coefs = np.array(list(LR.coef_[0][0:5]) + [np.mean(abs(LR.coef_[0][5:]))])
-    feature_NAs = ['TMB', 'Chemotherapy history', 'Albumin', 'NLR', 'Age', 'Cancer type']
+    feature_NAs = ['TMB', 'Systemic therapy history', 'Albumin', 'NLR', 'Age', 'Cancer type']
 elif LRmodelNA == 'LR5noTMB':
     coefs = np.array(list(LR.coef_[0][0:4]) + [np.mean(abs(LR.coef_[0][4:]))])
-    feature_NAs = ['Chemotherapy history', 'Albumin', 'NLR', 'Age', 'Cancer type']
+    feature_NAs = ['Systemic therapy history', 'Albumin', 'NLR', 'Age', 'Cancer type']
 
 feature_coefs_abs = abs(coefs)
 sorted_idx = np.argsort(feature_coefs_abs)
 coefs = coefs[sorted_idx]
 feature_coefs_abs = feature_coefs_abs[sorted_idx]
 feature_NAs = np.array(feature_NAs)[sorted_idx]
-
-df = pd.DataFrame({'Feature': feature_NAs, 'Importance': feature_coefs_abs})
-df.to_csv('../03.Results/source_data_sfig01.csv', index=False)
 
 pos = np.arange(sorted_idx.shape[0]) + .5
 figOut = '../03.Results/PanCancer_FeaturetImportance_'+LRmodelNA+'.pdf'

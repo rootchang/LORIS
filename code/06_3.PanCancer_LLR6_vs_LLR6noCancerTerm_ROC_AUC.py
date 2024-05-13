@@ -1,7 +1,7 @@
 ###############################################################################################
-#Aim: Pan-cancer LLR6 vs. LLR6(remove cancer-type term) comparison
-#Description: AUC comparison between LLR6 vs. LLR6(remove cancer-type term) on training and multiple test sets.
-#             (Extended Data Fig. 8).
+#Aim: Pan-cancer LLR6 vs. LLR6NC comparison
+#Description: AUC comparison between original LLR6 vs. LLR6 without using the cancer type calibration term (LLR6NC)
+#             on training and multiple test sets (Extended Data Fig. 9b).
 #Run command: python 06_3.PanCancer_LLR6_vs_LLR6noCancerTerm_ROC_AUC.py
 ###############################################################################################
 
@@ -65,31 +65,29 @@ if __name__ == "__main__":
     phenoNA = 'Response'
     cancer_type = 'all'
     model_type = ''
-    featuresNA_LLR6 = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    featuresNA_LLR6 = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
-    featuresNA_LLR5 = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    featuresNA_LLR5 = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
-    xy_colNAs = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    xy_colNAs = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                  'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                  'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                  'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)  # Chowell2018
-    dataMorris_new = pd.read_excel(dataALL_fn, sheet_name='Morris_new', index_col=0)  # Morris_new
-    dataMorris_new2 = pd.read_excel(dataALL_fn, sheet_name='Morris_new2', index_col=0)  # Morris_new2
-    dataKato = pd.read_excel(dataALL_fn, sheet_name='Kurzrock_panCancer', index_col=0)  # Kurzrock_panCancer
-    dataKato['Albumin'] = 3.8  # impute values for the LLRx model (mean Chowell train)
-    dataKato['NLR'] = 6.2 # impute values for the LLRx model (mean Chowell train)
-    dataPradat = pd.read_excel(dataALL_fn, sheet_name='Pradat_panCancer', index_col=0) # Chowell2018
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
+    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
+    dataMSK1 = pd.read_excel(dataALL_fn, sheet_name='MSK1', index_col=0)
+    dataMSK12 = pd.read_excel(dataALL_fn, sheet_name='MSK12', index_col=0)
+    dataKato = pd.read_excel(dataALL_fn, sheet_name='Kato_panCancer', index_col=0)
+    dataPradat = pd.read_excel(dataALL_fn, sheet_name='Pradat_panCancer', index_col=0)
 
-    dataALL = [dataChowellTrain, dataChowellTest, dataMorris_new, dataMorris_new2, dataKato, dataPradat]
+    dataALL = [dataChowellTrain, dataChowellTest, dataMSK1, dataMSK12, dataKato, dataPradat]
 
     if cancer_type == 'nonNSCLC':
         dataALL = [c.loc[c['CancerType11']==0,:] for c in dataALL]
@@ -97,8 +95,6 @@ if __name__ == "__main__":
     for i in range(len(dataALL)):
         dataALL[i] = dataALL[i][xy_colNAs].astype(float)
         dataALL[i] = dataALL[i].dropna(axis=0)
-
-    #dataALL = [c.loc[c['Chemo_before_IO'] == 1, :] for c in dataALL]
 
     # truncate TMB
     TMB_upper = 50
@@ -189,20 +185,6 @@ if __name__ == "__main__":
         p1 = delong_test(y_test_list[i], y_LLR6pred_test_list[i], y_LLR5pred_test_list[i])
         pval_list.append(p1)
         print('Dataset %d: LLR6 vs LLR5 p-val: %g'%(i+1,p1))
-
-    ############################## save source data for figure ##############################
-    dataset_list = []
-    true_label_list = []
-    LLR6_pred_list = []
-    LLR5_pred_list = []
-    dataset_unique = ["Chowell train","Chowell test","MSK1","MSK2","Kato et al.","Pradat et al."]
-    for i in range(6):
-        LLR6_pred_list.extend(y_LLR6pred_test_list[i])
-        LLR5_pred_list.extend(y_LLR5pred_test_list[i])
-        true_label_list.extend(y_test_list[i])
-        dataset_list.extend([dataset_unique[i]]*len(y_test_list[i]))
-    df = pd.DataFrame({"Cancer_type":dataset_list, "True_label":true_label_list, "LLR6_score":LLR6_pred_list, "LLR5_score":LLR5_pred_list})
-    df.to_csv('../03.Results/source_data_sfig04b.csv', index=False)
 
     ############################## Plot ROC curves ##############################
     textSize = 8

@@ -49,31 +49,31 @@ if __name__ == "__main__":
     randomSearchNumber = 1
     phenoNA = 'Response'
     rf16 = ["CancerType_grouped", "Albumin", "HED", "TMB", "FCNA", "BMI", "NLR", "Platelets", "HGB", "Stage", "Age", "Drug",
-            "Chemo_before_IO", "HLA_LOH", "MSI", "Sex"]
-    rf6 = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', "CancerType_grouped"]
+            "Systemic_therapy_history", "HLA_LOH", "MSI", "Sex"]
+    rf6 = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', "CancerType_grouped"]
     if MLM ==  'LLR6':
-        featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+        featuresNA = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
     elif MLM ==  'LR5noTMB':
-        featuresNA = ['Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+        featuresNA = ['Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
     else:
-        featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age','Drug', 'Sex', 'MSI', 'Stage',
+        featuresNA = ['TMB', 'Systemic_therapy_history', 'Albumin', 'FCNA', 'NLR', 'Age','Drug', 'Sex', 'MSI', 'Stage',
                       'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
-                      'CancerType14', 'CancerType15', 'CancerType16'] ## all 16 features
+                      'CancerType14', 'CancerType15', 'CancerType16'] # all 16 features
 
     cat_features = []
 
     ################################################# 1. Data read in #################################################
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    data_train = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    data_train = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     # Data truncation
     TMB_upper = 50
     Age_upper = 85
@@ -81,8 +81,8 @@ if __name__ == "__main__":
     data_train['TMB'] = [c if c < TMB_upper else TMB_upper for c in data_train['TMB']]
     data_train['Age'] = [c if c < Age_upper else Age_upper for c in data_train['Age']]
     data_train['NLR'] = [c if c < NLR_upper else NLR_upper for c in data_train['NLR']]
-    counter = Counter(data_train[phenoNA])  # count examples in each class
-    pos_weight = counter[0] / counter[1]  # estimate scale_pos_weight value
+    counter = Counter(data_train[phenoNA])
+    pos_weight = counter[0] / counter[1]
     print('  Number of all features: ', len(featuresNA), '\n  Their names: ', featuresNA)
     print('  Phenotype name: ', phenoNA)
     print('  Negative/Positive samples in training set: ', pos_weight)
@@ -127,10 +127,10 @@ if __name__ == "__main__":
     elif MLM == 'LLR6':
         param_dict = {'C': [0.1], 'class_weight': ['balanced'], 'l1_ratio': [1], 'max_iter': [100],
                       'penalty': ['elasticnet'], 'solver': ['saga']}
-        ############################# 2. Optimal model hyperparameter combination search ##############################
+    ############################# 2. Optimal model hyperparameter combination search ##############################
     if MLM not in ['RF16_NBT','RF6', 'TMB']:
         MLM_temp = MLM
-        if MLM in ['LLR6', 'LLR5noChemo', 'LR5noTMB', 'LLR5noCancer']:
+        if MLM in ['LLR6', 'LLR5noPSTH', 'LR5noTMB', 'LLR5noCancer']:
             MLM_temp = 'LogisticRegression'
         search_cv = utils2.optimalHyperParaSearcher(MLM_temp, SCALE, data_train, featuresNA, phenoNA,scoring_dict, \
             randomSeed, CPU_num, N_repeat_KFold, info_shown,Kfold,cat_features, randomSearchNumber, param_dict, True)

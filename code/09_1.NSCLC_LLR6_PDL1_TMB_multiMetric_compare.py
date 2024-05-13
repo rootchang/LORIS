@@ -23,8 +23,8 @@ from sklearn.utils import resample
 
 plt.rcParams.update({'font.size': 10})
 plt.rcParams["font.family"] = "Arial"
-palette = sns.color_palette("deep")
-
+palette = ["#377EB8", "#FF7F00", "#4D9943", "#E7BA52", "#999999", "#F7CAC9"]
+sns.set_palette(palette)
 
 def AUC_calculator(y, y_pred):
     fpr, tpr, threshold = roc_curve(y, y_pred, pos_label=1)
@@ -73,28 +73,26 @@ if __name__ == "__main__":
     phenoNA = 'Response'
     LLRmodelNA = 'LLR6'
     cutoff_value_LLR6 = 0.44
-    featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
+    featuresNA = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age']
 
-    xy_colNAs = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    xy_colNAs = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                   'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                   'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                   'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
+    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
     dataChowell = pd.concat([dataChowellTrain,dataChowellTest],axis=0)
 
-    dataMorris_new = pd.read_excel(dataALL_fn, sheet_name='Morris_new', index_col=0)
-    dataLee = pd.read_excel(dataALL_fn, sheet_name='Lee_NSCLC', index_col=0)
+    dataMSK1 = pd.read_excel(dataALL_fn, sheet_name='MSK1', index_col=0)
+    dataLee = pd.read_excel(dataALL_fn, sheet_name='Shim_NSCLC', index_col=0)
 
-    dataVanguri = pd.read_excel(dataALL_fn, sheet_name='Vanguri_NSCLC_all', index_col=0)
+    dataVanguri = pd.read_excel(dataALL_fn, sheet_name='Vanguri_NSCLC', index_col=0)
     dataRavi = pd.read_excel(dataALL_fn, sheet_name='Ravi_NSCLC', index_col=0)
-    dataRavi['Albumin'] = 3.8  # impute values for the LLR6 model
-    dataRavi['NLR'] = 6.9 # impute values for the LLR6 model
 
-    dataALL = [dataChowell, dataMorris_new, dataLee, dataVanguri, dataRavi]
+    dataALL = [dataChowell, dataMSK1, dataLee, dataVanguri, dataRavi]
 
     for i in range(len(dataALL)):
         dataALL[i] = dataALL[i].loc[dataALL[i]['CancerType']=='NSCLC',]
@@ -209,10 +207,10 @@ if __name__ == "__main__":
             AUC, score = AUC_calculator(y_test_list[i], y_pred_test)
         y_pred_01 = [int(c >= score) for c in y_pred_test]
         tn, fp, fn, tp = confusion_matrix(y_test_list[i], y_pred_01).ravel()
-        Sensitivity = tp / (tp + fn)  # TPR, recall
-        Specificity = tn / (tn + fp)  # 1 - FPR
+        Sensitivity = tp / (tp + fn)
+        Specificity = tn / (tn + fp)
         Accuracy = (tp + tn) / (tp + tn + fp + fn)
-        PPV = tp / (tp + fp)  # Precision
+        PPV = tp / (tp + fp)
         NPV = tn / (tn + fn)
         F1 = 2*PPV*Sensitivity/(PPV+Sensitivity)
         OddsRatio = (tp / (tp + fp)) / (fn / (tn + fn))
@@ -250,10 +248,10 @@ if __name__ == "__main__":
             AUC, score = AUC_calculator(y_test_list[i], y_pred_test)
         y_pred_01 = [int(c >= score) for c in y_pred_test]
         tn, fp, fn, tp = confusion_matrix(y_test_list[i], y_pred_01).ravel()
-        Sensitivity = tp / (tp + fn)  # TPR, recall
-        Specificity = tn / (tn + fp)  # 1 - FPR
+        Sensitivity = tp / (tp + fn)
+        Specificity = tn / (tn + fp)
         Accuracy = (tp + tn) / (tp + tn + fp + fn)
-        PPV = tp / (tp + fp)  # Precision
+        PPV = tp / (tp + fp)
         NPV = tn / (tn + fn)
         F1 = 2 * PPV * Sensitivity / (PPV + Sensitivity)
         OddsRatio = (tp / (tp + fp)) / (fn / (tn + fn))
@@ -291,10 +289,10 @@ if __name__ == "__main__":
             score = cutoff_value_TMB
         y_pred_01 = [int(c >= score) for c in y_pred_test]
         tn, fp, fn, tp = confusion_matrix(y_test_list[i], y_pred_01).ravel()
-        Sensitivity = tp / (tp + fn)  # TPR, recall
-        Specificity = tn / (tn + fp)  # 1 - FPR
+        Sensitivity = tp / (tp + fn)
+        Specificity = tn / (tn + fp)
         Accuracy = (tp + tn) / (tp + tn + fp + fn)
-        PPV = tp / (tp + fp)  # Precision
+        PPV = tp / (tp + fp)
         NPV = tn / (tn + fn)
         F1 = 2 * PPV * Sensitivity / (PPV + Sensitivity)
         OddsRatio = (tp / (tp + fp)) / (fn / (tn + fn))
@@ -379,18 +377,18 @@ if __name__ == "__main__":
         y_true = y_test_list[i]
         ###### LLR6 model
         y_pred = y_pred_LLR6[i]
-        prec, recall, _ = precision_recall_curve(y_true, y_pred) # , pos_label=clf.classes_[1]
+        prec, recall, _ = precision_recall_curve(y_true, y_pred)
         AUPRC, _ = AUPRC_calculator(y_true, y_pred)
         ax1[i].plot([0, 1], [sum(y_true)/len(y_true), sum(y_true)/len(y_true)], 'k', alpha=0.5, linestyle='--')
         ax1[i].plot(recall, prec, color= palette[0],linestyle='-', label='LLR6 AUC: %.2f' % (AUPRC))
         ###### PDL1 model
         y_pred = y_pred_PDL1[i]
-        prec, recall, _ = precision_recall_curve(y_true, y_pred)  # , pos_label=clf.classes_[1]
+        prec, recall, _ = precision_recall_curve(y_true, y_pred)
         AUPRC, _ = AUPRC_calculator(y_true, y_pred)
         ax1[i].plot(recall, prec, color= palette[2],linestyle='-', label='PDL1 AUC: %.2f' % (AUPRC))
         ###### TMB model
         y_pred = y_pred_TMB[i]
-        prec, recall, _ = precision_recall_curve(y_true, y_pred)  # , pos_label=clf.classes_[1]
+        prec, recall, _ = precision_recall_curve(y_true, y_pred)
         AUPRC, _ = AUPRC_calculator(y_true, y_pred)
         ax1[i].plot(recall, prec, color= palette[3],linestyle='-', label='TMB AUC: %.2f' % (AUPRC))
 
@@ -421,8 +419,8 @@ if __name__ == "__main__":
     barWidth = 0.2
     color_list = [palette[0], palette[2], palette[3]]
     modelNA_list = ['LLR6', 'PDL1', 'TMB']
-    metricsNA_list = ['F1 score', 'Odds ratio', 'Accuracy', 'Specificity', 'PPV', 'NPV']  # 'Sensitivity'
-    LLR6_data = [F1_LLR6, OddsRatio_LLR6, Accuracy_LLR6, Specificity_LLR6, PPV_LLR6, NPV_LLR6]  # Sensitivity_LLR6
+    metricsNA_list = ['F1 score', 'Odds ratio', 'Accuracy', 'Specificity', 'PPV', 'NPV']
+    LLR6_data = [F1_LLR6, OddsRatio_LLR6, Accuracy_LLR6, Specificity_LLR6, PPV_LLR6, NPV_LLR6]
     PDL1_data = [F1_PDL1, OddsRatio_PDL1, Accuracy_PDL1, Specificity_PDL1, PPV_PDL1, NPV_PDL1]
     TMB_data = [F1_TMB, OddsRatio_TMB, Accuracy_TMB, Specificity_TMB, PPV_TMB, NPV_TMB]
 

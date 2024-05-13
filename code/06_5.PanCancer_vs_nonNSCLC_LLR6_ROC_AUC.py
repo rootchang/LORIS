@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: Pan-cancer LLR6 vs. non-NSCLC LLR6 comparison
-#Description: AUC comparison between Pan-cancer LLR6 vs. non-NSCLC LLR6 on training and multiple test sets
-#             (with only non-NSCLC patients). (Supplementary Fig. 7)
+#Description: AUC comparison on non-NSCLC patients between Pan-cancer LLR6 vs. non-NSCLC LLR6 on training and
+#             multiple test sets (Extended Data Fig. 9a).
 #
 #Run command, e.g.: python 06_5.PanCancer_vs_nonNSCLC_LLR6_ROC_AUC.py
 ###############################################################################################
@@ -67,27 +67,25 @@ if __name__ == "__main__":
     cancer_type = 'nonNSCLC'
     model_type1 = 'all_'
     model_type2 = 'nonNSCLC_'
-    featuresNA_LLR6 = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    featuresNA_LLR6 = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
-    xy_colNAs = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    xy_colNAs = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                  'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                  'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                  'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)  # Chowell2018
-    dataMorris_new = pd.read_excel(dataALL_fn, sheet_name='Morris_new', index_col=0)  # Morris_new
-    dataMorris_new2 = pd.read_excel(dataALL_fn, sheet_name='Morris_new2', index_col=0)  # Morris_new2
-    dataKato = pd.read_excel(dataALL_fn, sheet_name='Kurzrock_panCancer', index_col=0)  # Kurzrock_panCancer
-    dataKato['Albumin'] = 0 # 3.8  # add fake values for the LLRx model (mean Chowell train)
-    dataKato['NLR'] = 0 # 6.2 # add fake values for the LLRx model (mean Chowell train)
-    dataPradat = pd.read_excel(dataALL_fn, sheet_name='Pradat_panCancer', index_col=0) # Chowell2018
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
+    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
+    dataMSK1 = pd.read_excel(dataALL_fn, sheet_name='MSK1', index_col=0)
+    dataMSK12 = pd.read_excel(dataALL_fn, sheet_name='MSK12', index_col=0)
+    dataKato = pd.read_excel(dataALL_fn, sheet_name='Kato_panCancer', index_col=0)
+    dataPradat = pd.read_excel(dataALL_fn, sheet_name='Pradat_panCancer', index_col=0)
 
-    dataALL = [dataChowellTrain, dataChowellTest, dataMorris_new, dataMorris_new2, dataKato, dataPradat]
+    dataALL = [dataChowellTrain, dataChowellTest, dataMSK1, dataMSK12, dataKato, dataPradat]
 
     if cancer_type == 'nonNSCLC':
         dataALL = [c.loc[c['CancerType11']==0,:] for c in dataALL]
@@ -95,9 +93,6 @@ if __name__ == "__main__":
     for i in range(len(dataALL)):
         dataALL[i] = dataALL[i][xy_colNAs].astype(float)
         dataALL[i] = dataALL[i].dropna(axis=0)
-        #print(dataALL[i].shape)
-
-    #dataALL = [c.loc[c['Chemo_before_IO'] == 1, :] for c in dataALL]
 
     # truncate TMB
     TMB_upper = 50
@@ -128,7 +123,6 @@ if __name__ == "__main__":
         x_test_LLR6_list.append(pd.DataFrame(c, columns=featuresNA_LLR6))
         x_test_LLR5_list.append(pd.DataFrame(c, columns=featuresNA_LLR6))
         y_test_list.append(c[phenoNA])
-        #print(c.shape,x_test_LLR6_list[-1].shape)
 
     y_LLR6pred_test_list = []
     y_LLR5pred_test_list = []
@@ -190,21 +184,6 @@ if __name__ == "__main__":
         p1 = delong_test(y_test_list[i], y_LLR6pred_test_list[i], y_LLR5pred_test_list[i])
         pval_list.append(p1)
         print('Dataset %d: LLR6 vs LLR5 p-val: %g'%(i+1,p1))
-
-    ############################## save source data for figure ##############################
-    dataset_list = []
-    true_label_list = []
-    LLR6_pred_list = []
-    nonNSCLC_LLR6_pred_list = []
-    dataset_unique = ["Chowell train","Chowell test","MSK1","MSK2","Kato et al.","Pradat et al."]
-    for i in range(6):
-        LLR6_pred_list.extend(y_LLR6pred_test_list[i])
-        nonNSCLC_LLR6_pred_list.extend(y_LLR5pred_test_list[i])
-        true_label_list.extend(y_test_list[i])
-        dataset_list.extend([dataset_unique[i]]*len(y_test_list[i]))
-    df = pd.DataFrame({"Cancer_type":dataset_list, "True_label":true_label_list, "LLR6_score":LLR6_pred_list, "nonNSCLC_LLR6_score":nonNSCLC_LLR6_pred_list})
-    df.to_csv('../03.Results/source_data_sfig04a.csv', index=False)
-
 
     ############################## Plot ROC curves ##############################
     textSize = 8

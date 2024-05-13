@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: Machine learning model evaluation result
 #Description: Get statistical result of machine learning model performance from the 2000-repeated 5-fold cross
-# validation (Extended Data Table 1; Supplementary Table 1).
+# validation (Supplementary Tables 1,2).
 #
 #Run command: python 05_4.PanCancer_20Models_evaluation_stat.py
 ###############################################################################################
@@ -17,12 +17,12 @@ MLM_list = ['LLR6', 'LR5noTMB', 'TMB', 'LogisticRegression', 'DecisionTree','RF6
              'GaussianProcess', "TabNet"]
 MLM_list1=['TMB', 'DecisionTree', 'RF6', 'RF16_NBT', 'RandomForest', 'ComplementNaiveBayes', 'MultinomialNaiveBayes',
            'GaussianNaiveBayes', 'BernoulliNaiveBayes', 'RF16_NBT'] # data scaling: None
-MLM_list2=['LLR6', 'LR5noTMB', 'LLR5noChemo', 'LogisticRegression','GBoost', 'AdaBoost', 'HGBoost', 'XGBoost',
+MLM_list2=['LLR6', 'LR5noTMB', 'LLR5noPSTH', 'LogisticRegression','GBoost', 'AdaBoost', 'HGBoost', 'XGBoost',
            'CatBoost', 'LightGBM','SupportVectorMachineLinear','SupportVectorMachinePoly','SupportVectorMachineRadial',
            'kNearestNeighbourhood','NeuralNetwork1','NeuralNetwork2','NeuralNetwork3','NeuralNetwork4',
            'GaussianProcess','QuadraticDiscriminantAnalysis', "TabNet"] # StandardScaler
 MLM_name_map = {'TMB':'TMB',
-                'LLR6': 'LLR6', 'LR5noTMB': 'LR5 (noTMB)', 'LLR5noChemo': 'LLR5 (noHistory)', 'LogisticRegression': 'LR16',
+                'LLR6': 'LLR6', 'LR5noTMB': 'LR5 (noTMB)', 'LLR5noPSTH': 'LLR5 (noHistory)', 'LogisticRegression': 'LR16',
                 'DecisionTree':'DecisionTree','RF6':'RF6','RF16_NBT':'RF16 (Chowell et al.)',
                 'RandomForest':'RandomForest','XGBoost':'XGBoost',
                 'NeuralNetwork1':'MultilayerPerceptron (1 layer)','NeuralNetwork2':'MultilayerPerceptron (2 layers)',
@@ -110,10 +110,9 @@ for MLM in MLM_list:
         temp_df = temp_df[ordered_columns]
     performance_df = pd.concat([performance_df, temp_df], axis=0)
 
-##### stat and write to file
+##### write to file
 fnOut_test = '../03.Results/PanCancer_20Models_Performance_test.xlsx'
 fnOut_delta = '../03.Results/PanCancer_20Models_Performance_delta.xlsx'
-# Group by 'method' and calculate mean and std for each metric
 grouped = performance_df.groupby('method').agg({
     'AUC_test': ['mean', 'std'],
     'AUC_delta': ['mean', 'std'],
@@ -130,7 +129,7 @@ grouped = performance_df.groupby('method').agg({
     'Performance_test': ['mean', 'std'],
     'Performance_delta': ['mean', 'std']
 }).reset_index()
-# Rename the columns for better readability
+# Rename the columns
 grouped.columns = ['method', 'mean_AUC_test', 'std_AUC_test', 'mean_AUC_delta', 'std_AUC_delta',
                    'mean_PRAUC_test', 'std_PRAUC_test', 'mean_PRAUC_delta', 'std_PRAUC_delta',
                    'mean_Accuracy_test', 'std_Accuracy_test', 'mean_Accuracy_delta', 'std_Accuracy_delta',
@@ -138,7 +137,6 @@ grouped.columns = ['method', 'mean_AUC_test', 'std_AUC_test', 'mean_AUC_delta', 
                    'mean_MCC_test', 'std_MCC_test', 'mean_MCC_delta', 'std_MCC_delta',
                    'mean_BA_test', 'std_BA_test', 'mean_BA_delta', 'std_BA_delta',
                    'mean_Performance_test', 'std_Performance_test', 'mean_Performance_delta', 'std_Performance_delta']
-#print(grouped)
 pval_test = []
 pval_delta = []
 for MLM in grouped['method']:
@@ -150,7 +148,6 @@ for MLM in grouped['method']:
     x2 = performance_df.loc[performance_df['method'] == MLM, 'Performance_delta']
     u, w_pval = mannwhitneyu(x1, x2)
     pval_delta.append(w_pval)
-
 
 grouped['Rank_test'] = grouped['mean_Performance_test'].rank(ascending=False)
 grouped['Rank_delta'] = grouped['mean_Performance_delta'].rank(ascending=True)
@@ -169,7 +166,7 @@ content_df['BA'] = grouped['mean_BA_test'].astype(str) + '±' + grouped['std_BA_
 content_df['Performance'] = grouped['mean_Performance_test'].astype(str) + '±' + grouped['std_Performance_test'].astype(str)
 content_df['Rank_test'] = grouped['Rank_test']
 content_df['pval_test'] = grouped['pval_test']
-sheet_name = 'Test'  # Specify the sheet name
+sheet_name = 'Test'
 content_df.to_excel(fnOut_test, sheet_name=sheet_name, index=False)
 
 content_df = pd.DataFrame()
@@ -183,5 +180,5 @@ content_df['BA'] = grouped['mean_BA_delta'].astype(str) + '±' + grouped['std_BA
 content_df['Performance'] = grouped['mean_Performance_delta'].astype(str) + '±' + grouped['std_Performance_delta'].astype(str)
 content_df['Rank_delta'] = grouped['Rank_delta']
 content_df['pval_delta'] = grouped['pval_delta']
-sheet_name = 'Delta'  # Specify the sheet name
+sheet_name = 'Delta'
 content_df.to_excel(fnOut_delta, sheet_name=sheet_name, index=False)

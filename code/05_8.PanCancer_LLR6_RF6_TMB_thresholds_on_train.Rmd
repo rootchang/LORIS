@@ -27,14 +27,14 @@ result_dir = "../03.Results/"
 
 # load data 
 ```{r}
-LLRmodelNA = 'LLR6' #  'LLR6'  'LLR5noTMB'  'LLR5noChemo'
+LLRmodelNA = 'LLR6' #  'LLR6'  'LLR5noTMB'  'LLR5noPSTH'
 
 train_LLR6score_df = read_excel(paste0(result_dir,LLRmodelNA,'_Scaler(StandardScaler)_prediction.xlsx'), "0", col_names = TRUE)
 train_RF6score_df = read_excel(paste0(result_dir,'RF6_Scaler(None)_prediction.xlsx'), "0", col_names = TRUE)
 
 selected_cols = c("SAMPLE_ID", "CancerType", "Response")
 
-train_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+train_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Chowell_train")
 train_info_df = train_info_df[selected_cols]
 
 train_info_df = merge(x = train_info_df, y = train_LLR6score_df[c("SAMPLE_ID","y_pred")], by = "SAMPLE_ID")

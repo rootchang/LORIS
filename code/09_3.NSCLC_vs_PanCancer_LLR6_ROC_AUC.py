@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: NSCLC-specific LLR6 vs. Pan-cancer LLR6 comparison
 #Description: AUC comparison between NSCLC-specific LLR6 vs. Pan-cancer LLR6 on training and multiple test sets.
-#             (Extended Data Fig. 5a)
+#             (Extended Data Fig. 6a)
 #Run command, e.g.: python 09_3.NSCLC_vs_PanCancer_LLR6_ROC_AUC.py
 ###############################################################################################
 
@@ -64,32 +64,30 @@ if __name__ == "__main__":
     ########################## Read in data ##########################
     phenoNA = 'Response'
     cutoff_value_LLR6_NSCLC = 0.44
-    featuresNA_NSCLC = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
+    featuresNA_NSCLC = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age']
     cutoff_value_LLR6_PanCancer = 0.5
-    featuresNA_PanCancer = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    featuresNA_PanCancer = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
-    xy_colNAs = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    xy_colNAs = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
               'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
               'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
               'CancerType14', 'CancerType15', 'CancerType16'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
+    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
     dataChowell = pd.concat([dataChowellTrain,dataChowellTest],axis=0)
 
-    dataMorris_new = pd.read_excel(dataALL_fn, sheet_name='Morris_new', index_col=0)
-    dataLee = pd.read_excel(dataALL_fn, sheet_name='Lee_NSCLC', index_col=0)
+    dataMSK1 = pd.read_excel(dataALL_fn, sheet_name='MSK1', index_col=0)
+    dataLee = pd.read_excel(dataALL_fn, sheet_name='Shim_NSCLC', index_col=0)
 
-    dataVanguri = pd.read_excel(dataALL_fn, sheet_name='Vanguri_NSCLC_all', index_col=0)
+    dataVanguri = pd.read_excel(dataALL_fn, sheet_name='Vanguri_NSCLC', index_col=0)
     dataRavi = pd.read_excel(dataALL_fn, sheet_name='Ravi_NSCLC', index_col=0)
-    dataRavi['Albumin'] = 3.8  # impute values for the LLR6 model
-    dataRavi['NLR'] = 6.9 # impute values for the LLR6 model
 
-    dataALL = [dataChowell, dataMorris_new, dataLee, dataVanguri, dataRavi]
+    dataALL = [dataChowell, dataMSK1, dataLee, dataVanguri, dataRavi]
 
     for i in range(len(dataALL)):
         dataALL[i] = dataALL[i].loc[dataALL[i]['CancerType']=='NSCLC',]

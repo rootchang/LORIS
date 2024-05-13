@@ -147,7 +147,7 @@ def HGBoost_searcher(x_train, y_train, pos_weight, randomSeed, CPU_num, Kfold_li
     hgb_model = HistGradientBoostingClassifier(categorical_features=cat_features_index, random_state=randomSeed)
     if not params:
         params = {
-            'loss': ['auto'],  # default='auto',
+            'loss': ['auto'],
             'learning_rate': [0.01, 0.03, 0.05, 0.1, 0.3, 0.5],
             'max_iter': list(np.arange(200, 2001, 200)),
             'min_samples_leaf': list(range(2, 31, 2)),

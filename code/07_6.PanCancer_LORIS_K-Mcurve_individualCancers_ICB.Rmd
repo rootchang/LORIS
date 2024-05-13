@@ -1,6 +1,6 @@
 ###############################################################################################
 Aim: Kaplan-Meier analysis of PFS/OS in individual cancers
-Description: To plot Kaplan-Meier curves of PFS/OS in individual cancers of merged MSK cohorts (Supplementary Figs. 4,5)
+Description: To plot Kaplan-Meier curves of PFS/OS in individual cancers of merged MSK cohorts (Extended Data Fig. 5)
 ###############################################################################################
 
 
@@ -44,18 +44,18 @@ test2_LLR6score_df = read_excel(paste0(result_dir,'PanCancer_all_LLR6_Scaler(Sta
 test3_LLR6score_df = read_excel(paste0(result_dir,'PanCancer_all_LLR6_Scaler(StandardScaler)_prediction.xlsx'), "3")
 LLR6score_df = rbind(train_LLR6score_df,test1_LLR6score_df,test2_LLR6score_df,test3_LLR6score_df)
 
-selected_cols = c("SAMPLE_ID","Year of ICI treatment start", "TMB", "Chemo_before_IO", "CancerType", "Age", "Drug", "Sex", "PFS_Event", "PFS_Months", "OS_Event", "OS_Months")
+selected_cols = c("SAMPLE_ID","Year of ICI treatment start", "TMB", "Systemic_therapy_history", "CancerType", "Age", "Drug", "Sex", "PFS_Event", "PFS_Months", "OS_Event", "OS_Months")
 
-train_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+train_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Chowell_train")
 train_info_df = train_info_df[selected_cols]
-test1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2018")
+test1_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Chowell_test")
 test1_info_df = test1_info_df[selected_cols]
-test2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new")
+test2_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "MSK1")
 test2_info_df = test2_info_df[selected_cols]
-test3_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new2")
+test3_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "MSK12")
 test3_info_df = test3_info_df[selected_cols]
 
-renamed_cols = c("SAMPLE_ID","Year_IO", "TMB", "Chemo_before_IO", "CancerType", "Age", "Drug", "Sex", "PFS_Event", "PFS_Months", "OS_Event", "OS_Months")
+renamed_cols = c("SAMPLE_ID","Year_IO", "TMB", "Systemic_therapy_history", "CancerType", "Age", "Drug", "Sex", "PFS_Event", "PFS_Months", "OS_Event", "OS_Months")
 
 info_df = rbind(train_info_df,test1_info_df,test2_info_df,test3_info_df)
 info_df = merge(x = info_df, y = LLR6score_df[c("SAMPLE_ID","y_pred")], by = "SAMPLE_ID")
@@ -152,8 +152,6 @@ info_df = info_df %>% group_by(CancerType) %>% mutate(
 
 data_plot = info_df
 data_plot[['LLR6score_01']] <- relevel(factor(data_plot[['LLR6score_01']]), ref = "LLR6high")
-
-write.csv(data_plot, paste0(result_dir,"source_data_fig04.csv"))
 
 
 for (ct in CancerTypes){

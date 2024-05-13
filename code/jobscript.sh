@@ -2,7 +2,6 @@
 #SBATCH --cpus-per-task=48
 #SBATCH --mem=96g
 #SBATCH --time=4-00:00 # Runtime in D-HH:MM
-########### sbatch --job-name=name --export=var_name=value[,var_name=value...]
 
 module load python/3.8
 

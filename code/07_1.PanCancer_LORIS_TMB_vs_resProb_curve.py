@@ -1,6 +1,6 @@
 ###############################################################################################
-#Aim: Score vs. ICB objective response odds
-#Description: Relationship between LORIS or TMB score vs. ICB objective response odds
+#Aim: Score vs. ICB objective response probability
+#Description: Relationship between LORIS or TMB score vs. ICB objective response probability
 #             1) on all patients
 #             2) on non-NSCLC patients
 #             (Fig. 4a,b; Extended Data Fig. 8a,b).
@@ -26,11 +26,11 @@ palette = sns.color_palette("deep")
 
 if __name__ == "__main__":
 
-    bs_number = 1000 # multi-time resampling for mean,sd,CI
+    bs_number = 1000 # bootstrapping
     random.seed(1)
 
     Plot_type = sys.argv[1] # 'PanCancer_all'  'PanCancer_nonNSCLC'
-    bin_size = 0.1 # 0.05, 0.1, 0.15, 0.2
+    bin_size = 0.1
 
     start_time = time.time()
     print('Raw data read in ...')
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     y_true = np.array(y_true)
     y_pred_LLR6 = np.array(y_pred_LLR6)
     y_pred_TMB = np.array(y_pred_TMB)
-    score_list_LLR6 = np.arange(0.0, 1.01, 0.01)  # 0.0, 0.92, 0.01
+    score_list_LLR6 = np.arange(0.0, 1.01, 0.01)
     score_list_TMB = np.arange(0, 101, 1)
     LLR6_num = len(score_list_LLR6)
     TMB_num = len(score_list_TMB)
@@ -117,7 +117,7 @@ if __name__ == "__main__":
             else:
                 ORR_temp = R_num / tot_num
                 LLR6_ORR_list[score_i].append(ORR_temp)
-            if sum(y_pred_LLR6_resampled > score - bin_size/2) < 0.01 * len(y_pred_LLR6_resampled):  # finish score_list_LLR6 loop
+            if sum(y_pred_LLR6_resampled > score - bin_size/2) < 0.01 * len(y_pred_LLR6_resampled):  # stop
                 break
         for score_i in range(len(score_list_TMB)):
             score = score_list_TMB[score_i]
@@ -157,7 +157,7 @@ if __name__ == "__main__":
             else:
                 ORR_temp = R_num / tot_num
                 TMB_ORR_list[score_i].append(ORR_temp)
-            if sum(y_pred_TMB_resampled > score - 5) < 0.01 * len(y_pred_TMB_resampled):  # finish score_list_LLR6 loop
+            if sum(y_pred_TMB_resampled > score - 5) < 0.01 * len(y_pred_TMB_resampled):  # stop
                 break
     # remove empty elements (upon scores that near 1)
     for i in range(len(LLR6high_ORR_list)):
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     for i in range(len(LLR6high_ORR_95)):
         print(score_list_LLR6[i], LLR6high_ORR_mean[i], LLR6low_ORR_mean[i], LLR6_ORR_mean[i], LLR6low_patientRatio_mean[i])
 
-    # remove empty elements (upon scores that near 1)
+    # remove empty elements
     for i in range(len(TMBhigh_ORR_list)):
         if len(TMBhigh_ORR_list[i]) == 0:
             break

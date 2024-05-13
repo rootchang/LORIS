@@ -46,18 +46,18 @@ if __name__ == "__main__":
 
     ########################## Read in data ##########################
     phenoNA = 'Response'
-    featuresNA_LLR6 = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    featuresNA_LLR6 = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
     featuresNA_RF16 = ["CancerType_grouped", "Albumin", "HED", "TMB", "FCNA", "BMI", "NLR", "Platelets", "HGB",
-                       "Stage", "Age", "Drug","Chemo_before_IO", "HLA_LOH", "MSI", "Sex"]
+                       "Stage", "Age", "Drug","Systemic_therapy_history", "HLA_LOH", "MSI", "Sex"]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     data_RF16_train = dataChowellTrain[featuresNA_RF16 + [phenoNA]]
-    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
+    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
     if plot_train_or_test=='test':
         data_LLR6_test = dataChowellTest[featuresNA_LLR6+[phenoNA]]
         data_RF16_test = dataChowellTest[featuresNA_RF16 + [phenoNA]]
@@ -120,12 +120,6 @@ if __name__ == "__main__":
     p2 = delong_test(y_test_RF16, y_LLR6pred_test, y_RF16pred_test, 'PRAUC')
     print('LLR6 vs RF16 PRAUC p-val: %g' % (p2))
 
-    ################ print source data ################
-    print("True_label LLR6_score RF16_score")
-    True_label = y_test_RF16.tolist()
-    for i in range(len(True_label)):
-        print(True_label[i],y_LLR6pred_test[i],y_RF16pred_test[i])
-
     ############################## Plot ##############################
     textSize = 8
     ############# Plot ROC curves ##############
@@ -140,7 +134,6 @@ if __name__ == "__main__":
     ###### LLR6 model
     fpr, tpr, thresholds = roc_curve(y_true, y_LLR6pred_test)
     AUC = roc_auc_score(y_true, y_LLR6pred_test)
-    #ax1[i].plot([0, 1], [0, 1], 'k', alpha=0.5, linestyle='--')
     ax1[i].plot(fpr, tpr, color= palette[0],linestyle='-', label='LLR6 AUC: %.2f' % (AUC))
     ###### RF16 model
     fpr, tpr, thresholds = roc_curve(y_true, y_RF16pred_test)
@@ -149,7 +142,6 @@ if __name__ == "__main__":
 
     ax1[i].legend(frameon=False, loc=(0.05, 0), prop={'size': textSize}, handlelength=1, handletextpad=0.1,
                   labelspacing=0.2)
-    #ax1[i].text(0.5, 0.4, 'p = %.2f' % p1)
 
     ax1[i].set_xlim([-0.02, 1.02])
     ax1[i].set_ylim([-0.02, 1.02])
@@ -184,12 +176,9 @@ if __name__ == "__main__":
     fig1.savefig(output_fig1)
     plt.close()
 
-
     ##################### correlation scatter plot between predicted scores from LLR6 and RF16 #####################
     textSize = 8
     output_fig2 = '../03.Results/PanCancer_LLR6_vs_RF16NBT_scoreCorrelation_scatterPlot.pdf'
-    # fig, ax = plt.subplots(1, 1, figsize=(3, 3))
-    # fig.subplots_adjust(left=0.27, bottom=0.25, right=0.93, top=0.96, wspace=0.35, hspace=0.5)
 
     fig = plt.figure(figsize=(3, 3))
     gs = GridSpec(4, 4, left=0.2, bottom=0.15, right=0.96, top=0.96, wspace=0, hspace=0)
@@ -222,10 +211,7 @@ if __name__ == "__main__":
     ax_marg_x.set_xlim([0, 1])
     ax_marg_y.set_ylim([0, 1])
 
-
     # Set labels on marginals
-    # ax_marg_y.set_xlabel('Marginal x label')
-    # ax_marg_x.set_ylabel('Marginal y label')
     ax_marg_y.spines['top'].set_visible(False)
     ax_marg_y.spines['right'].set_visible(False)
     ax_marg_y.spines['bottom'].set_visible(False)
@@ -235,32 +221,6 @@ if __name__ == "__main__":
     ax_marg_x.set_yticks([])
     ax_marg_y.set_xticks([])
 
-
-    # # Create your scatter plot
-    # pp = sns.scatterplot(x=y_LLR6pred_test, y=y_RF16pred_test, color='black', s=10, ax=ax)
-    # # Add density plot along the x-axis (top)
-    # sns.kdeplot(y_LLR6pred_test, ax=pp.twinx(), color='red', legend=False)
-    # # Add density plot along the y-axis (right)
-    # sns.kdeplot(y_RF16pred_test, ax=pp.twiny(), color='blue', legend=False)
-    # # Set labels for the density plots
-    # pp.twinx().set_ylabel("Density", color="red")
-    # pp.twiny().set_xlabel("Density", color="blue")
-
-
-    # ax2.scatter(y_LLR6pred_test, y_RF16pred_test, color='black', s=10)
-    # slope, intercept, r_value, p_value, std_err = stats.linregress(y_LLR6pred_test, y_RF16pred_test)
-    # ax2.plot(y_LLR6pred_test, slope * y_LLR6pred_test + intercept, color='red')
-    # spearman_corr, _ = stats.spearmanr(y_LLR6pred_test, y_RF16pred_test)
-    # textstr = f'r = {spearman_corr:.2f}' # \np = {p_value:.1e}
-    # ax2.text(0.15, 0.8, textstr, fontsize=textSize, color='black', backgroundcolor='white')
-    # ax2.set_xlabel('LLR6 score')
-    # ax2.set_ylabel('RF16 score')
-    #
-    # ax2.spines['right'].set_visible(False)
-    # ax2.spines['top'].set_visible(False)
-    # ax2.set_xticks([0, 0.5, 1])
-    # ax2.set_yticks([0, 0.5, 1])
-
-    fig.savefig(output_fig2) # , dpi=300
+    fig.savefig(output_fig2)
     plt.close()
 

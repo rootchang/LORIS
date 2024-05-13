@@ -2,7 +2,7 @@
 Aim: Predict survival of NSCLC patients using different models
 Description: calculate multi-variable hazard ratios for different cohorts using LORIS, PDL1 & TMB
 LORIS has been calculated using NSCLC-specific LLR6, pan-cancer LLR6, and NSCLC-specific LLR2 models respectively
-(Fig. 6d,e; Extended Data Fig. 5b,c; Supplementary Fig. 7b,c)
+(Fig. 6d,e; Extended Data Fig. 6b,c,e,f)
 ###############################################################################################
 
 
@@ -54,26 +54,26 @@ test4_LLR6score_df$DataSet <- "Ravi et al."
 
 all_LLR6score_df = rbind(train_LLR6score_df,test1_LLR6score_df,test2_LLR6score_df,test3_LLR6score_df,test4_LLR6score_df)
 
-selected_cols = c("SAMPLE_ID","TMB","PDL1_TPS(%)","Chemo_before_IO","Age","Drug","Sex","PFS_Event","PFS_Months","OS_Event","OS_Months")
+selected_cols = c("SAMPLE_ID","TMB","PDL1_TPS(%)","Systemic_therapy_history","Age","Drug","Sex","PFS_Event","PFS_Months","OS_Event","OS_Months")
 
-train1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+train1_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Chowell_train")
 train1_info_df = train1_info_df[train1_info_df$CancerType=='NSCLC',selected_cols]
-train2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2018")
+train2_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Chowell_test")
 train2_info_df = train2_info_df[train2_info_df$CancerType=='NSCLC',selected_cols]
 train_info_df  = rbind(train1_info_df,train2_info_df)
-test1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new")
+test1_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "MSK1")
 test1_info_df = test1_info_df[test1_info_df$CancerType=='NSCLC',selected_cols]
-test2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Lee_NSCLC")
+test2_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Shim_NSCLC")
 test2_info_df = test2_info_df[selected_cols]
-test3_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Vanguri_NSCLC_all")
+test3_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Vanguri_NSCLC")
 test3_info_df = test3_info_df[selected_cols]
-test4_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Ravi_NSCLC")
+test4_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Ravi_NSCLC")
 test4_info_df = test4_info_df[selected_cols]
 
 info_df = rbind(train_info_df,test1_info_df,test2_info_df,test3_info_df,test4_info_df)
 
 info_df = merge(x = info_df, y = all_LLR6score_df[c("SAMPLE_ID","y_pred", "DataSet")], by = "SAMPLE_ID")
-colnames(info_df) = c("SAMPLE_ID","TMB","PDL1","Chemo_before_IO","Age","Drug","Sex","PFS_Event","PFS_Months","OS_Event","OS_Months", "LLRscore", "DataSet")
+colnames(info_df) = c("SAMPLE_ID","TMB","PDL1","Systemic_therapy_history","Age","Drug","Sex","PFS_Event","PFS_Months","OS_Event","OS_Months", "LLRscore", "DataSet")
 
 DataSets = c('Chowell et al.', 'MSK1', 'Shim et al.', 'Vanguri et al.', 'Ravi et al.')
 ```
@@ -160,9 +160,6 @@ if (testVAR0 == 'LLRscore'){
 
 
 HR_each_cancer = rbind(HR_each_cancer,HR_pancohort)
-
-write.csv(HR_each_cancer, paste0(result_dir,"source_data_efig06bcde.csv"))
-
 
 
 

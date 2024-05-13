@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: Performance of pan-cancer LLR6 on MSK-ICB cohort vs MSK-nonICB cohort
 #Description: Comparison of ROC / AUC of pan-cancer LR5noTMB on MSK-ICB cohort vs MSK-nonICB cohort.
-#             (Supplementary Fig. 6)
+#             (Extended Data Fig. 4e)
 #Run command: python 07_4.PanCancer_LR5noTMB_LORIS_ROC_AUC_nonICB_vs_ICB_OS.py
 ###############################################################################################
 
@@ -71,19 +71,19 @@ if __name__ == "__main__":
     phenotype = ['OS0.5yr', 'OS1yr', 'OS2yr', 'OS3yr']
     cancer_type = 'all'
     modelNA = "LR5noTMB"
-    featuresNA_1 = ['Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    featuresNA_1 = ['Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
-    xy_colNAs = ['Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    xy_colNAs = ['Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                  'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                  'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                  'CancerType14', 'CancerType15', 'CancerType16'] + ['OS_Months', 'OS_Event', 'CancerType'] + phenotype
 
     print('Raw data processing ...')
-    data_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataICBtest1 = pd.read_excel(data_fn, sheet_name='Chowell2018', index_col=0)
-    dataICBtest2 = pd.read_excel(data_fn, sheet_name='Morris_new', index_col=0)
+    data_fn = '../02.Input/AllData.xlsx'
+    dataICBtest1 = pd.read_excel(data_fn, sheet_name='Chowell_test', index_col=0)
+    dataICBtest2 = pd.read_excel(data_fn, sheet_name='MSK1', index_col=0)
     dataICBtest = pd.concat([dataICBtest1, dataICBtest2], axis=0)
     temp_df = dataICBtest[xy_colNAs[0:21]].astype(float)
     rows_valid = (temp_df.isnull().sum(axis=1) == 0)

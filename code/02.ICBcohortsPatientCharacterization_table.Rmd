@@ -21,40 +21,40 @@ result_dir = "../03.Results/"
 
 # load data 
 ```{r}
-selected_cols = c('TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'CancerType', 'NLR', 'Age', 'Drug', 'Sex', 'Response')
+selected_cols = c('TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'CancerType', 'NLR', 'Age', 'Drug', 'Sex', 'Response')
 
-Chowell1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+Chowell1_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Chowell_train")
 Chowell1_info_df = Chowell1_info_df[selected_cols]
-Chowell2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2018")
+Chowell2_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Chowell_test")
 Chowell2_info_df = Chowell2_info_df[selected_cols]
 Chowell_info_df = rbind(Chowell1_info_df,Chowell2_info_df)
 Chowell_info_df$cohort = 'Chowell'
 
-MSK1_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new")
+MSK1_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "MSK1")
 MSK1_info_df = MSK1_info_df[selected_cols]
 MSK1_info_df$cohort = 'MSK1'
 
-MSK2_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new2")
+MSK2_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "MSK12")
 MSK2_info_df = MSK2_info_df[selected_cols]
 MSK2_info_df$cohort = 'MSK2'
 
-Shim_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Lee_NSCLC")
+Shim_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Shim_NSCLC")
 Shim_info_df = Shim_info_df[selected_cols]
 Shim_info_df$cohort = 'Shim'
 
-Kato_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Kurzrock_panCancer")
+Kato_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Kato_panCancer")
 Kato_info_df = Kato_info_df[selected_cols]
 Kato_info_df$cohort = 'Kato'
 
-Vanguri_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Vanguri_NSCLC_all")
+Vanguri_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Vanguri_NSCLC")
 Vanguri_info_df = Vanguri_info_df[selected_cols]
 Vanguri_info_df$cohort = 'Vanguri'
 
-Ravi_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Ravi_NSCLC")
+Ravi_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Ravi_NSCLC")
 Ravi_info_df = Ravi_info_df[selected_cols]
 Ravi_info_df$cohort = 'Ravi'
 
-Pradat_info_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Pradat_panCancer")
+Pradat_info_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Pradat_panCancer")
 Pradat_info_df = Pradat_info_df[selected_cols]
 Pradat_info_df$cohort = 'Pradat'
 
@@ -93,7 +93,7 @@ print(paste(freq_R))
 print(paste(freq_R2))
 
 # Systemic therapy history
-freq_Chemo = table(allCohorts_info_df$Chemo_before_IO)
+freq_Chemo = table(allCohorts_info_df$Systemic_therapy_history)
 freq_Chemo2 = freq_Chemo/sum(freq_Chemo)*100
 print(paste(freq_Chemo))
 print(paste(freq_Chemo2))
@@ -138,7 +138,7 @@ print(paste(freq_drug))
 print(paste(freq_drug2))
 
 # Systemic therapy history
-freq_Chemo = table(Cohort_info_df$Chemo_before_IO)
+freq_Chemo = table(Cohort_info_df$Systemic_therapy_history)
 freq_Chemo2 = freq_Chemo/sum(freq_Chemo)*100
 print(paste(freq_Chemo))
 print(paste(freq_Chemo2))

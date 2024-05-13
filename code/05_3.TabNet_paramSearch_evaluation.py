@@ -67,7 +67,6 @@ def CVsetGenerator(randomSeed,dataChowell_Train,featuresNA,phenoNA):
         y_train_val_sets.append(train_val_sets[i][phenoNA])
         X_valid_sets.append(val_sets[i][featuresNA])
         y_valid_sets.append(val_sets[i][phenoNA])
-        # This illustrates the behaviour of the model's fit method using Compressed Sparse Row matrices
         sparse_X_train_sets.append(scipy.sparse.csr_matrix(X_train_sets[-1]))
         sparse_X_train_train_sets.append(scipy.sparse.csr_matrix(train_train_sets[i][featuresNA]))
         sparse_X_train_val_sets.append(scipy.sparse.csr_matrix(train_val_sets[i][featuresNA]))
@@ -83,15 +82,15 @@ def performance_calculator(y_true, y_pred):
     if ind_max < 0.5:  # the first threshold is larger than all x values (tpr=1, fpr=1)
         ind_max = 1
     opt_cutoff = thresholds[ind_max]
-    print('LLR opt_cutoff: ', opt_cutoff)  # , specificity_sensitivity_sum[ind_max]
+    print('LLR opt_cutoff: ', opt_cutoff)
     y_pred_01 = [int(c >= opt_cutoff) for c in y_pred]
     tn, fp, fn, tp = metrics.confusion_matrix(y_true, y_pred_01).ravel()
 
     auc = metrics.roc_auc_score(y_true, y_pred)
     pr_auc = metrics.average_precision_score(y_true, y_pred)
-    PPV = tp / (tp + fp)  # Precision
-    Sensitivity = tp / (tp + fn)  # TPR, recall
-    Specificity = tn / (tn + fp)  # 1 - FPR
+    PPV = tp / (tp + fp)
+    Sensitivity = tp / (tp + fn)
+    Specificity = tn / (tn + fp)
     f1_score = 2 * PPV * Sensitivity / (PPV + Sensitivity)
     accuracy = (tp + tn) / (tp + tn + fp + fn)
     MCC = (tp * tn - fp * fn) / np.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
@@ -109,20 +108,20 @@ if __name__ == "__main__":
     train_size = float(sys.argv[4]) # 0.8
     train_sample_size_used = int(sys.argv[5]) # use how many samples to train the LLR6
     task = sys.argv[6] # ps: paramSearch, ev: evaluation
-    cancer_type = sys.argv[7] # 'Pan' 'NSCLC'
+    cancer_type = sys.argv[7] # Pan or NSCLC
 
     phenoNA = 'Response'
     if cancer_type == 'Pan':
-        featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage',
+        featuresNA = ['TMB', 'Systemic_therapy_history', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage',
                       'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI', 'CancerType']
         xy_colNAs = featuresNA + [phenoNA]
     elif cancer_type == 'NSCLC':
-        featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage',
+        featuresNA = ['TMB', 'Systemic_therapy_history', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI', 'Stage',
                       'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI', 'PDL1_TPS(%)']
         xy_colNAs = featuresNA + [phenoNA] + ['CancerType']
 
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     dataChowell_Train0 = dataChowell_Train0[xy_colNAs]
     dataChowell_Train = copy.deepcopy(dataChowell_Train0)
     if train_sample_size_used > dataChowell_Train0.shape[0]:
@@ -145,8 +144,8 @@ if __name__ == "__main__":
     dataChowell_Train['NLR'] = [c if c < NLR_upper else NLR_upper for c in dataChowell_Train['NLR']]
 
     print('Chowell patient number (training): ', dataChowell_Train.shape[0])
-    counter = Counter(dataChowell_Train[phenoNA])  # count examples in each class
-    pos_weight = counter[0] / counter[1]  # estimate scale_pos_weight value
+    counter = Counter(dataChowell_Train[phenoNA])
+    pos_weight = counter[0] / counter[1]
     print('  Phenotype name: ', phenoNA)
     print('  Negative/Positive samples in training set: ', pos_weight)
 
@@ -211,7 +210,7 @@ if __name__ == "__main__":
         AUC_max = 0
         params_ind = 0
         for params in grid:
-            params['n_a'] = params['n_d']  # n_a=n_d always per the paper
+            params['n_a'] = params['n_d']
             AUC_mean = 0
             for i in range(5): # 5-fold CV
                 tabnet = model
@@ -242,11 +241,11 @@ if __name__ == "__main__":
         if cancer_type == 'NSCLC':
             fnOut = '../03.Results/16features/NSCLC/TabNet_evaluation_2000R5CV_result_NSCLC.txt'
             params = {'clip_value': 2.0, 'gamma': 2, 'lambda_sparse': 0.001, 'momentum': 0.3,
-                      'n_a': 24, 'n_d': 24, 'n_independent': 2, 'n_shared': 2, 'n_steps': 3} # AUC_max = 0.826,
+                      'n_a': 24, 'n_d': 24, 'n_independent': 2, 'n_shared': 2, 'n_steps': 3}
         elif cancer_type == 'Pan':
             fnOut = '../03.Results/16features/PanCancer/TabNet_evaluation_2000R5CV_result.txt'
             params = {'clip_value': 2.0, 'gamma': 1.5, 'lambda_sparse': 0.0001, 'momentum': 0.5, 'n_a': 32, 'n_d': 32,
-                      'n_independent': 2, 'n_shared': 2, 'n_steps': 5}  # AUC_max = 0.744,
+                      'n_independent': 2, 'n_shared': 2, 'n_steps': 5}
         fhOut = open(fnOut,'w')
         for i0 in range(2000):  # 2000-repeated 5-fold CV
             print('Evaluating model, round %d...'%(i0+1))
@@ -278,7 +277,7 @@ if __name__ == "__main__":
                 content = [auc_train, pr_auc_train, f1_score_train, accuracy_train, MCC_train, balanced_accuracy_train,
                            auc_test, pr_auc_test, f1_score_test, accuracy_test, MCC_test, balanced_accuracy_test]
                 fhOut.write('\t'.join([str(c) for c in content])+'\n')
-            fhOut.flush() # This flushes the data to the file immediately
+            fhOut.flush()
         fhOut.close()
         print('Done. Time used: %d'%(time.time()-start_time))
 

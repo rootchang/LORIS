@@ -41,7 +41,7 @@ if __name__ == "__main__":
                           SCALE + ')_CV' + str(Kfold)+'Rep'+str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     model_hyperParas_fh = open(model_hyperParas_fn,'w')
     phenoNA = 'Response'
-    featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age','Drug', 'Sex', 'MSI', 'Stage',
+    featuresNA = ['TMB', 'Systemic_therapy_history', 'Albumin', 'FCNA', 'NLR', 'Age','Drug', 'Sex', 'MSI', 'Stage',
                   'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI', 'CancerType1',
                   'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                   'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
@@ -51,8 +51,8 @@ if __name__ == "__main__":
 
     ################################################# 1. Data read in #################################################
     print('Raw data processing ...', file=model_hyperParas_fh)
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    data_train = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    data_train = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
     # Data truncation
     TMB_upper = 50
     Age_upper = 85

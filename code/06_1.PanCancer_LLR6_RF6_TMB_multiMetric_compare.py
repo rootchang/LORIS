@@ -3,7 +3,7 @@
 #Description: Multiple metric comparison between LLR6 vs. RF6 vs. TMB on training and multiple test sets. Specifically
 #             1) Models on all patients
 #             2) Models on non-NSCLC patients
-#             (Fig. 2a,c; Extended Data Fig. 6a; Supplementary Fig. 2).
+#             (Fig. 2a,c; Extended Data Fig. 7a).
 #Run command, e.g.: python 06_1.PanCancer_LLR6_RF6_TMB_multiMetric_compare.py all
 ###############################################################################################
 
@@ -26,7 +26,9 @@ from sklearn.utils import resample
 
 plt.rcParams.update({'font.size': 10})
 plt.rcParams["font.family"] = "Arial"
-palette = sns.color_palette("deep")
+palette = ["#377EB8", "#FF7F00", "#4D9943", "#E7BA52", "#999999", "#F7CAC9"]
+sns.set_palette(palette)
+#palette = sns.color_palette("deep")
 
 
 def AUC_calculator(y, y_pred):
@@ -88,28 +90,26 @@ if __name__ == "__main__":
 
     ########################## Read in data ##########################
     cutoff_value_LLRx = 0.5
-    featuresNA = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    featuresNA = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
-    featuresNA_RF6 = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType_grouped']
-    xy_colNAs = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    featuresNA_RF6 = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType_grouped']
+    xy_colNAs = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                  'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                  'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                  'CancerType14', 'CancerType15', 'CancerType16'] + ['CancerType_grouped'] + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)  # Chowell2018
-    dataMorris_new = pd.read_excel(dataALL_fn, sheet_name='Morris_new', index_col=0)  # Morris_new
-    dataMorris_new2 = pd.read_excel(dataALL_fn, sheet_name='Morris_new2', index_col=0)  # Morris_new2
-    dataKato = pd.read_excel(dataALL_fn, sheet_name='Kurzrock_panCancer', index_col=0)  # Kurzrock_panCancer
-    dataKato['Albumin'] = 3.8  # impute values for the LLRx model (mean Chowell train)
-    dataKato['NLR'] = 6.2 # impute values for the LLRx model (mean Chowell train)
-    dataPradat = pd.read_excel(dataALL_fn, sheet_name='Pradat_panCancer', index_col=0) # Chowell2018
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    dataChowellTrain = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
+    dataChowellTest = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
+    dataMSK1 = pd.read_excel(dataALL_fn, sheet_name='MSK1', index_col=0)  # MSK1
+    dataMSK12 = pd.read_excel(dataALL_fn, sheet_name='MSK12', index_col=0)  # MSK12
+    dataKato = pd.read_excel(dataALL_fn, sheet_name='Kato_panCancer', index_col=0)
+    dataPradat = pd.read_excel(dataALL_fn, sheet_name='Pradat_panCancer', index_col=0)
 
-    dataALL = [dataChowellTrain, dataChowellTest, dataMorris_new, dataMorris_new2, dataKato, dataPradat]
+    dataALL = [dataChowellTrain, dataChowellTest, dataMSK1, dataMSK12, dataKato, dataPradat]
 
     if cancer_type == 'nonNSCLC':
         dataALL = [c.loc[c['CancerType11']==0,:] for c in dataALL]
@@ -232,10 +232,10 @@ if __name__ == "__main__":
         y_pred_01 = [int(c >= score) for c in y_pred_test]
         AUPRC = average_precision_score(y_test_list[i], y_pred_test)
         tn, fp, fn, tp = confusion_matrix(y_test_list[i], y_pred_01).ravel()
-        Sensitivity = tp / (tp + fn)  # TPR, recall
-        Specificity = tn / (tn + fp)  # 1 - FPR
+        Sensitivity = tp / (tp + fn)
+        Specificity = tn / (tn + fp)
         Accuracy = (tp + tn) / (tp + tn + fp + fn)
-        PPV = tp / (tp + fp)  # Precision
+        PPV = tp / (tp + fp)
         NPV = tn / (tn + fn)
         F1 = 2*PPV*Sensitivity/(PPV+Sensitivity)
         OddsRatio = (tp / (tp + fp)) / (fn / (tn + fn))
@@ -278,10 +278,10 @@ if __name__ == "__main__":
         y_pred_01 = [int(c >= score) for c in y_pred_test]
         AUPRC = average_precision_score(y_test_list[i], y_pred_test)
         tn, fp, fn, tp = confusion_matrix(y_test_list[i], y_pred_01).ravel()
-        Sensitivity = tp / (tp + fn)  # TPR, recall
-        Specificity = tn / (tn + fp)  # 1 - FPR
+        Sensitivity = tp / (tp + fn)
+        Specificity = tn / (tn + fp)
         Accuracy = (tp + tn) / (tp + tn + fp + fn)
-        PPV = tp / (tp + fp)  # Precision
+        PPV = tp / (tp + fp)
         NPV = tn / (tn + fn)
         F1 = 2 * PPV * Sensitivity / (PPV + Sensitivity)
         OddsRatio = (tp / (tp + fp)) / (fn / (tn + fn))
@@ -297,7 +297,7 @@ if __name__ == "__main__":
         OddsRatio_RF6.append(OddsRatio)
 
     ########################## test TMB model performance ##########################
-    modelNA = 'TMB' # TMB NLR Albumin Age
+    modelNA = 'TMB'
 
     print(modelNA+':')
     fnOut = '../03.Results/PanCancer_' + cancer_type + '_' + modelNA + '_Scaler(' + 'None' + ')_prediction.xlsx'
@@ -322,10 +322,10 @@ if __name__ == "__main__":
         y_pred_01 = [int(c >= score) for c in y_pred_test]
         AUPRC = average_precision_score(y_test_list[i], y_pred_test)
         tn, fp, fn, tp = confusion_matrix(y_test_list[i], y_pred_01).ravel()
-        Sensitivity = tp / (tp + fn)  # TPR, recall
-        Specificity = tn / (tn + fp)  # 1 - FPR
+        Sensitivity = tp / (tp + fn)
+        Specificity = tn / (tn + fp)
         Accuracy = (tp + tn) / (tp + tn + fp + fn)
-        PPV = tp / (tp + fp)  # Precision
+        PPV = tp / (tp + fp)
         NPV = tn / (tn + fn)
         F1 = 2 * PPV * Sensitivity / (PPV + Sensitivity)
         OddsRatio = (tp / (tp + fp)) / (fn / (tn + fn))
@@ -379,7 +379,6 @@ if __name__ == "__main__":
             ax1[i].plot(fpr, tpr, color= palette[3],linestyle='-', label='%.2f (%.2f, %.2f)' % (AUC,AUC_05,AUC_95))
             ax1[i].legend(frameon=False, loc=(0.4, -0.02), prop={'size': textSize}, handlelength=1, handletextpad=0.1,
                           labelspacing=0.2)
-        #ax1[i].text(0, 0.9, 'p = %s' % pval_list[i])
         ax1[i].set_xlim([-0.02, 1.02])
         ax1[i].set_ylim([-0.02, 1.02])
         ax1[i].set_yticks([0,0.5,1])
@@ -427,9 +426,6 @@ if __name__ == "__main__":
     print('TMB_Sensitivity', ' '.join([str(c) for c in Sensitivity_TMB]))
 
 
-
-
-
     output_fig_fn = '../03.Results/PanCancer_'+LLRmodelNA+'_RF6_TMB_MultiMetric_'+cancer_type+'.pdf'
     ax1 = [0] * 8
     fig1, ((ax1[0], ax1[1]), (ax1[2], ax1[3]), (ax1[4], ax1[5]), (ax1[6], ax1[7])) = plt.subplots(4, 2, figsize=(6.5, 6.5))
@@ -441,8 +437,6 @@ if __name__ == "__main__":
     LLRx_data = [AUPRC_LLRx, OddsRatio_LLRx, Accuracy_LLRx, F1_LLRx, PPV_LLRx, NPV_LLRx, Specificity_LLRx, Sensitivity_LLRx]
     RF6_data = [AUPRC_RF6, OddsRatio_RF6, Accuracy_RF6, F1_RF6, PPV_RF6, NPV_RF6, Specificity_RF6, Sensitivity_RF6]
     TMB_data = [AUPRC_TMB, OddsRatio_TMB, Accuracy_TMB, F1_TMB, PPV_TMB, NPV_TMB, Specificity_TMB, Sensitivity_TMB]
-    #'''
-    #### with training set
     for i in range(8):
         bh11 = ax1[i].bar(np.array([0, 1, 2, 3, 4, 5]) + barWidth * 1, LLRx_data[i],
                        color=color_list[0], width=barWidth, edgecolor='k', label=modelNA_list[0])

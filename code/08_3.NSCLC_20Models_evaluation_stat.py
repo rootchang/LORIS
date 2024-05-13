@@ -1,7 +1,7 @@
 ###############################################################################################
 #Aim: Machine learning model evaluation result
 #Description: Get statistical result of machine learning model performance from the 2000-repeated 5-fold cross
-# validation (Supplementary Tables 3,4).
+# validation (Supplementary Tables 4,5).
 #
 #Run command: python 08_3.NSCLC_20Models_evaluation_stat.py
 ###############################################################################################
@@ -116,10 +116,9 @@ for MLM in MLM_list:
         temp_df = temp_df[ordered_columns]
     performance_df = pd.concat([performance_df, temp_df], axis=0)
 
-##### stat and write to file
+#####  write to file
 fnOut_test = '../03.Results/NSCLC_20Models_ModelPerformance_test.xlsx'
 fnOut_delta = '../03.Results/NSCLC_20Models_ModelPerformance_delta.xlsx'
-# Group by 'method' and calculate mean and std for each metric
 grouped = performance_df.groupby('method').agg({
     'AUC_test': ['mean', 'std'],
     'AUC_delta': ['mean', 'std'],
@@ -136,7 +135,7 @@ grouped = performance_df.groupby('method').agg({
     'Performance_test': ['mean', 'std'],
     'Performance_delta': ['mean', 'std']
 }).reset_index()
-# Rename the columns for better readability
+# Rename the columns
 grouped.columns = ['method', 'mean_AUC_test', 'std_AUC_test', 'mean_AUC_delta', 'std_AUC_delta',
                    'mean_PRAUC_test', 'std_PRAUC_test', 'mean_PRAUC_delta', 'std_PRAUC_delta',
                    'mean_Accuracy_test', 'std_Accuracy_test', 'mean_Accuracy_delta', 'std_Accuracy_delta',
@@ -174,7 +173,7 @@ content_df['BA'] = grouped['mean_BA_test'].astype(str) + '±' + grouped['std_BA_
 content_df['Performance'] = grouped['mean_Performance_test'].astype(str) + '±' + grouped['std_Performance_test'].astype(str)
 content_df['Rank_test'] = grouped['Rank_test']
 content_df['pval_test'] = grouped['pval_test']
-sheet_name = 'Test'  # Specify the sheet name
+sheet_name = 'Test'
 content_df.to_excel(fnOut_test, sheet_name=sheet_name, index=False)
 
 content_df = pd.DataFrame()
@@ -188,5 +187,5 @@ content_df['BA'] = grouped['mean_BA_delta'].astype(str) + '±' + grouped['std_BA
 content_df['Performance'] = grouped['mean_Performance_delta'].astype(str) + '±' + grouped['std_Performance_delta'].astype(str)
 content_df['Rank_delta'] = grouped['Rank_delta']
 content_df['pval_delta'] = grouped['pval_delta']
-sheet_name = 'Delta'  # Specify the sheet name
+sheet_name = 'Delta'
 content_df.to_excel(fnOut_delta, sheet_name=sheet_name, index=False)

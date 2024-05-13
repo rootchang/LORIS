@@ -42,13 +42,13 @@ if __name__ == "__main__":
     model_hyperParas_fn = '../03.Results/NSCLC_Chowell_ModelParaSearchResult_' + MLM + '_Scaler(' + SCALE + ')_CV' + str(
         Kfold) + 'Rep' + str(N_repeat_KFold) + '_random' + str(randomSeed) + '.txt'
     if MLM not in ['RF6']:
-        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI',
+        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex', 'MSI',
                       'Stage', 'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI']
     else:
-        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    data_train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-    data_train2 = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
+        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age']
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    data_train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
+    data_train2 = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
     data_train = pd.concat([data_train1,data_train2],axis=0)
     data_train = data_train.loc[data_train['CancerType']=='NSCLC',]
 
@@ -69,8 +69,8 @@ if __name__ == "__main__":
     data_train['TMB'] = [c if c < TMB_upper else TMB_upper for c in data_train['TMB']]
     data_train['Age'] = [c if c < Age_upper else Age_upper for c in data_train['Age']]
     data_train['NLR'] = [c if c < NLR_upper else NLR_upper for c in data_train['NLR']]
-    counter = Counter(data_train[phenoNA])  # count examples in each class
-    pos_weight = counter[0] / counter[1]  # estimate scale_pos_weight value
+    counter = Counter(data_train[phenoNA])
+    pos_weight = counter[0] / counter[1]
     print('  Number of all features: ', len(featuresNA), '\n  Their names: ', featuresNA, file=model_hyperParas_fh)
     print('  Phenotype name: ', phenoNA, file=model_hyperParas_fh)
     print('  Negative/Positive samples in training set: ', pos_weight, file=model_hyperParas_fh)

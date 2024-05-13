@@ -71,19 +71,19 @@ if __name__ == "__main__":
     phenotype = ['OS0.5yr', 'OS1yr', 'OS2yr', 'OS3yr']
     LLRmodelNA = 'LLR6'
     cancer_type = 'all'
-    featuresNA_1 = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    featuresNA_1 = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                       'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                       'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                       'CancerType14', 'CancerType15', 'CancerType16']
-    xy_colNAs = ['TMB', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age', 'CancerType1',
+    xy_colNAs = ['TMB', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age', 'CancerType1',
                  'CancerType2', 'CancerType3', 'CancerType4', 'CancerType5', 'CancerType6', 'CancerType7',
                  'CancerType8', 'CancerType9', 'CancerType10', 'CancerType11', 'CancerType12', 'CancerType13',
                  'CancerType14', 'CancerType15', 'CancerType16'] + ['OS_Months', 'OS_Event', 'CancerType'] + phenotype
 
     print('Raw data processing ...')
-    data_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    dataICBtest1 = pd.read_excel(data_fn, sheet_name='Chowell2018', index_col=0)
-    dataICBtest2 = pd.read_excel(data_fn, sheet_name='Morris_new', index_col=0)
+    data_fn = '../02.Input/AllData.xlsx'
+    dataICBtest1 = pd.read_excel(data_fn, sheet_name='Chowell_test', index_col=0)
+    dataICBtest2 = pd.read_excel(data_fn, sheet_name='MSK1', index_col=0)
     dataICBtest = pd.concat([dataICBtest1, dataICBtest2], axis=0)
     temp_df = dataICBtest[xy_colNAs[0:21]].astype(float)
     rows_valid = (temp_df.isnull().sum(axis=1) == 0)

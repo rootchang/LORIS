@@ -2,7 +2,7 @@
 #Aim: coefs. and intercepts for the LLR models
 #Description: To determine the coefs. and intercepts of the
 #             1) NSCLC-specific LLR6 model
-#             2) NSCLC-specific LLR5noChemo model
+#             2) NSCLC-specific LLR5noPSTH model
 #             3) NSCLC-specific LLR2 model
 #             with 10k-repeat train-test splitting (80%:20%).
 #
@@ -33,19 +33,19 @@ if __name__ == "__main__":
     train_size = 0.8
 
     phenoNA = 'Response'
-    LLRmodelNA = sys.argv[1]  # 'LLR6'   'LLR5noChemo'  'LLR2'
+    LLRmodelNA = sys.argv[1]  # 'LLR6'   'LLR5noPSTH'  'LLR2'
     if LLRmodelNA == 'LLR6':
-        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
-    elif LLRmodelNA == 'LLR5noChemo':
+        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age']
+    elif LLRmodelNA == 'LLR5noPSTH':
         featuresNA = ['TMB', 'PDL1_TPS(%)', 'Albumin', 'NLR', 'Age']
     elif LLRmodelNA == 'LLR2':
         featuresNA = ['TMB', 'PDL1_TPS(%)']
     xy_colNAs = featuresNA + [phenoNA]
 
     print('Raw data processing ...')
-    dataALL_fn = '../../02.Input/features_phenotype_allDatasets.xlsx'
-    dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-    dataChowell_Train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
+    dataALL_fn = '../../02.Input/AllData.xlsx'
+    dataChowell_Train0 = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
+    dataChowell_Train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
 
     dataChowell_Train0 = pd.concat([dataChowell_Train0,dataChowell_Train1],axis=0)
 
@@ -70,8 +70,8 @@ if __name__ == "__main__":
     except:
         1
     print('Patient number (training): ', dataChowell_Train0.shape[0])
-    counter = Counter(dataChowell_Train0[phenoNA])  # count examples in each class
-    pos_weight = counter[0] / counter[1]  # estimate scale_pos_weight value
+    counter = Counter(dataChowell_Train0[phenoNA])
+    pos_weight = counter[0] / counter[1]
     print('  Phenotype name: ', phenoNA)
     print('  Negative/Positive samples in training set: ', pos_weight)
 
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     AUC_score_dict = {}
     for resampling_i in range(resampleNUM):
         data_train, data_test = train_test_split(dataChowell_Train, test_size=test_size, random_state=resampling_i*randomSeed,
-                                                 stratify=None)  # stratify=None
+                                                 stratify=None)
         y_train = data_train[phenoNA]
         y_test = data_test[phenoNA]
         x_train6LR = pd.DataFrame(data_train, columns=featuresNA)

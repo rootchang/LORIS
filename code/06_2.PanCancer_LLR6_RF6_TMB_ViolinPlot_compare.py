@@ -4,7 +4,7 @@
 #             test sets. Specifically
 #             1) Models on all patients
 #             2) Models on non-NSCLC patients
-#             (Fig. 2b; Extended Data Fig. 6b).
+#             (Fig. 2b; Extended Data Fig. 7b).
 #Run command, e.g.: python 06_2.PanCancer_LLR6_RF6_TMB_ViolinPlot_compare.py all
 ###############################################################################################
 

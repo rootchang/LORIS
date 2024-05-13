@@ -48,13 +48,13 @@ if __name__ == "__main__":
     phenoNA = 'Response'
 
     if MLM in ['LLR6', 'RF6']:
-        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
+        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age']
     elif MLM == 'LLR5noTMB':
-        featuresNA = ['PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'NLR', 'Age']
+        featuresNA = ['PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'NLR', 'Age']
     elif MLM == 'TMB':
         featuresNA = ['TMB']
     else:
-        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Chemo_before_IO', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex',
+        featuresNA = ['TMB', 'PDL1_TPS(%)', 'Systemic_therapy_history', 'Albumin', 'FCNA', 'NLR', 'Age', 'Drug', 'Sex',
                       'MSI', 'Stage', 'HLA_LOH', 'HED', 'Platelets', 'HGB', 'BMI']
     xy_colNAs = featuresNA + [phenoNA]
     cat_features = []
@@ -62,9 +62,9 @@ if __name__ == "__main__":
 
     ################################################# 1. Data read in #################################################
     print('Raw data processing ...')
-    dataALL_fn = '../02.Input/features_phenotype_allDatasets.xlsx'
-    data_train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell2015-2017', index_col=0)
-    data_train2 = pd.read_excel(dataALL_fn, sheet_name='Chowell2018', index_col=0)
+    dataALL_fn = '../02.Input/AllData.xlsx'
+    data_train1 = pd.read_excel(dataALL_fn, sheet_name='Chowell_train', index_col=0)
+    data_train2 = pd.read_excel(dataALL_fn, sheet_name='Chowell_test', index_col=0)
     data_train = pd.concat([data_train1, data_train2], axis=0)
     data_train = data_train.loc[data_train['CancerType'] == 'NSCLC',]
     # Data truncation
@@ -76,8 +76,8 @@ if __name__ == "__main__":
     data_train['NLR'] = [c if c < NLR_upper else NLR_upper for c in data_train['NLR']]
 
     data_train = data_train[xy_colNAs].dropna()
-    counter = Counter(data_train[phenoNA])  # count examples in each class
-    pos_weight = counter[0] / counter[1]  # estimate scale_pos_weight value
+    counter = Counter(data_train[phenoNA])
+    pos_weight = counter[0] / counter[1]
     print('  Dataset: ', dataset, '. ML: ', MLM, '. Scaler: ', SCALE)
     print('  Number of all features: ', len(featuresNA), '\n  Their names: ', featuresNA)
     print('  Phenotype name: ', phenoNA)

@@ -25,26 +25,26 @@ cutoff = 0.5
 # load data 
 ```{r}
 selected_cols = c("CancerType") # "SAMPLE_ID",
-Chowell_df1 = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2015-2017")
+Chowell_df1 = read_excel(paste0(input_dir,'AllData.xlsx'), "Chowell_train")
 Chowell_df1 = Chowell_df1[selected_cols]
-Chowell_df2 = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Chowell2018")
+Chowell_df2 = read_excel(paste0(input_dir,'AllData.xlsx'), "Chowell_test")
 Chowell_df2 = Chowell_df2[selected_cols]
 Chowell_df = rbind(Chowell_df1,Chowell_df2)
 
-MSK_df1 = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new")
+MSK_df1 = read_excel(paste0(input_dir,'AllData.xlsx'), "MSK1")
 MSK_df1 = MSK_df1[selected_cols]
-MSK_df2 = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Morris_new2")
+MSK_df2 = read_excel(paste0(input_dir,'AllData.xlsx'), "MSK12")
 MSK_df2 = MSK_df2[selected_cols]
 MSK_df = rbind(MSK_df1,MSK_df2)
 
-Kato_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Kurzrock_panCancer")
+Kato_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Kato_panCancer")
 Kato_df = Kato_df[selected_cols]
 
-Pradat_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "Pradat_panCancer")
+Pradat_df = read_excel(paste0(input_dir,'AllData.xlsx'), "Pradat_panCancer")
 Pradat_df = Pradat_df[selected_cols]
 
 
-MSK_nonICB_df = read_excel(paste0(input_dir,'features_phenotype_allDatasets.xlsx'), "MSK_nonICB")
+MSK_nonICB_df = read_excel(paste0(input_dir,'AllData.xlsx'), "MSK_nonICB")
 MSK_nonICB_df = MSK_nonICB_df[selected_cols]
 
 CancerTypes = unique(c(Chowell_df$CancerType, MSK_df$CancerType, Kato_df$CancerType, Pradat_df$CancerType))
