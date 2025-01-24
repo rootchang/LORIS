@@ -147,12 +147,27 @@ Note: One may use `batchSubmit.py` and `jobscript.sh` to submit batch jobs to se
 
 
 ## Citation
-Tian-Gen Chang, Yingying Cao, Hannah J. Sfreddo, Saugato Rahman Dhruba, Se-Hoon Lee, Cristina Valero, Seong-Keun Yoo, Diego Chowell, Luc G. T. Morris, Eytan Ruppin. *LORIS robustly predicts patient outcomes with immune checkpoint blockade therapy using common clinical, pathologic, and genomic features.* Nature Cancer. (2024).
+**Chang, TG., Cao, Y., Sfreddo, H.J. et al.** *LORIS robustly predicts patient outcomes with immune checkpoint blockade therapy using common clinical, pathologic and genomic features*. **Nat Cancer** 5, 1158–1175 (2024). [https://doi.org/10.1038/s43018-024-00772-7](https://doi.org/10.1038/s43018-024-00772-7)
+
 
 ## Related links
-Pan-cancer LORIS has been made available as an online tool at [LORIS_NCI](https://loris.ccr.cancer.gov/).
+[Nature Cancer: News & Views](https://www.nature.com/articles/s43018-024-00802-4)
 
-An online calculator featuring a comprehensive list of all four models, including the pan-cancer LLR6 model, pan-cancer LLR5 model without patient systemic therapy history, NSCLC-specific LLR6 model, and NSCLC-specific LLR5 model without patient systemic therapy history, has been deposited on a separate GitHub webpage at [LORIS_web](https://rootchang.github.io/LORIS_web/).
+[Research Communities "Behind the Paper" blog post](https://communities.springernature.com/posts/developing-a-clinically-translational-ai-model-to-predict-immunotherapy-response)
+
+[Introduction of the work on X (formerly Twitter)](https://x.com/NCIEytanRuppin/status/1797646325338849281)
+
+[NCI CBIIT News](https://datascience.cancer.gov/news-events/news/interpretable-ai-helps-predict-effectiveness-immunotherapy)
+
+[NCI News Release](https://www.cancer.gov/news-events/press-releases/2024/ai-tool-predicts-response-to-immunotherapy)
+
+[NCI Podcast "Inside Cancer Careers": AI and Immunotherapy—A Breakthrough in Cancer Treatment](https://www.cancer.gov/grants-training/training/inside-cancer-careers/season-2-episode-15)
+
+[Cancer HealthCast: "This AI Tool Could Predict a Patient’s Response to Immunotherapy"](https://govciomedia.com/this-ai-tool-could-predict-a-patients-response-to-immunotherapy/)
+
+The pan-cancer LORIS tool is available online at [LORIS_NCI](https://loris.ccr.cancer.gov/).
+
+An online calculator featuring all four models—pan-cancer LLR6, pan-cancer LLR5 (without patient systemic therapy history), NSCLC-specific LLR6, and NSCLC-specific LLR5 (without patient systemic therapy history)—is available at [LORIS_web](https://rootchang.github.io/LORIS_web/).
 
 
 ## Contact
