@@ -23,7 +23,7 @@ data_survival_fn = '../02.Input/AllData.xlsx'
 data_survival_Train = pd.read_excel(data_survival_fn, sheet_name='Chowell_train', index_col=0)
 data_survival_Test1 = pd.read_excel(data_survival_fn, sheet_name='Chowell_test', index_col=0)
 data_survival_Test2 = pd.read_excel(data_survival_fn, sheet_name='MSK1', index_col=0)
-data_survival_Test3 = pd.read_excel(data_survival_fn, sheet_name='MSK12', index_col=0)
+data_survival_Test3 = pd.read_excel(data_survival_fn, sheet_name='MSK2', index_col=0)
 data_survival_Test4 = pd.read_excel(data_survival_fn, sheet_name='Shim_NSCLC', index_col=0)
 data_survival_Test5 = pd.read_excel(data_survival_fn, sheet_name='Kato_panCancer', index_col=0)
 data_survival_Test6 = pd.read_excel(data_survival_fn, sheet_name='Vanguri_NSCLC', index_col=0)
